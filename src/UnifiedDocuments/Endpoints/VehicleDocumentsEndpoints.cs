@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
 using UnifiedDocuments.Data;
 using UnifiedDocuments.Data.Entities;
@@ -16,10 +17,13 @@ public static class VehicleDocumentsEndpoints
 {
     private const int CacheableDocumentLimit = 10 * 1024 * 1024;
     private const int ContentCacheMinutes = 15;
+    private const int DefaultUnlinkedPageSize = 50;
+    private const int MaximumUnlinkedPageSize = 100;
 
     public static IEndpointRouteBuilder MapVehicleDocumentsEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/vehicles/{vin}/documents", GetDocumentsByVin);
+        endpoints.MapGet("/documents/unlinked", GetUnlinkedDocuments);
         endpoints.MapGet("/documents/{source}/{documentId}/content", GetDocumentContent);
         return endpoints;
     }
@@ -34,23 +38,92 @@ public static class VehicleDocumentsEndpoints
         if (normalizedVin.Length != 17 || !VinDetector.Find(normalizedVin).Contains(normalizedVin))
             return Results.BadRequest(new { message = "VIN must be 17 characters and cannot contain I, O or Q." });
 
-        var documents = await db.SourceDocuments
-            .AsNoTracking()
-            .Where(document => document.Vins.Any(link => link.Vin == normalizedVin))
+        return await GetDocumentList(
+            db.SourceDocuments.Where(document => document.Vins.Any(link => link.Vin == normalizedVin)),
+            httpContext,
+            cancellationToken);
+    }
+
+    private static async Task<IResult> GetUnlinkedDocuments(
+        UnifiedDocumentsDbContext db,
+        HttpContext httpContext,
+        CancellationToken cancellationToken,
+        string? cursor = null,
+        int pageSize = DefaultUnlinkedPageSize)
+    {
+        if (pageSize is < 1 or > MaximumUnlinkedPageSize)
+            return Results.BadRequest(new { message = $"Page size must be between 1 and {MaximumUnlinkedPageSize}." });
+
+        DocumentCursor? after = null;
+        if (cursor is not null)
+        {
+            if (cursor.Length is 0 or > 256)
+                return Results.BadRequest(new { message = "Invalid document cursor." });
+            try
+            {
+                after = JsonSerializer.Deserialize<DocumentCursor>(WebEncoders.Base64UrlDecode(cursor));
+            }
+            catch (Exception exception) when (exception is FormatException or JsonException)
+            {
+                return Results.BadRequest(new { message = "Invalid document cursor." });
+            }
+            if (after is null || after.Id <= 0 || after.Date == default)
+                return Results.BadRequest(new { message = "Invalid document cursor." });
+        }
+
+        var query = db.SourceDocuments.AsNoTracking().Where(document => !document.Vins.Any());
+        if (after is not null)
+        {
+            var date = after.Date;
+            var id = after.Id;
+            query = query.Where(document =>
+                (document.ModifiedAt ?? document.IndexedAt) < date ||
+                ((document.ModifiedAt ?? document.IndexedAt) == date && document.Id < id));
+        }
+
+        var documents = await query
+            .OrderByDescending(document => document.ModifiedAt ?? document.IndexedAt)
+            .ThenByDescending(document => document.Id)
+            .Take(pageSize + 1)
+            .ToListAsync(cancellationToken);
+        var hasMore = documents.Count > pageSize;
+        var page = documents.Take(pageSize).ToArray();
+        var last = page.LastOrDefault();
+        var nextCursor = hasMore && last is not null
+            ? WebEncoders.Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(
+                new DocumentCursor(last.ModifiedAt ?? last.IndexedAt, last.Id)))
+            : null;
+
+        return CachedJson(new { items = page.Select(ToMetadata), nextCursor }, httpContext);
+    }
+
+    private sealed record DocumentCursor(DateTimeOffset Date, long Id);
+
+    private sealed record DocumentMetadata(
+        string SourceName, string SourceDocumentId, string FileName,
+        string ContentType, string? BusinessKey, DateTimeOffset? ModifiedAt);
+
+    private static DocumentMetadata ToMetadata(SourceDocument document) => new(
+        document.SourceName, document.SourceDocumentId, document.FileName,
+        document.ContentType, document.BusinessKey, document.ModifiedAt);
+
+    private static async Task<IResult> GetDocumentList(
+        IQueryable<SourceDocument> query,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var documents = await query.AsNoTracking()
             .OrderByDescending(document => document.ModifiedAt ?? document.IndexedAt)
             .ThenBy(document => document.SourceName)
-            .Select(document => new
-            {
-                document.SourceName,
-                document.SourceDocumentId,
-                document.FileName,
-                document.ContentType,
-                document.BusinessKey,
-                document.ModifiedAt,
-            })
+            .ThenBy(document => document.SourceDocumentId)
             .ToListAsync(cancellationToken);
 
-        var responseBody = JsonSerializer.SerializeToUtf8Bytes(documents, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        return CachedJson(documents.Select(ToMetadata), httpContext);
+    }
+
+    private static IResult CachedJson(object body, HttpContext httpContext)
+    {
+        var responseBody = JsonSerializer.SerializeToUtf8Bytes(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         var entityTag = $"\"{Convert.ToHexStringLower(SHA256.HashData(responseBody))}\"";
         httpContext.Response.Headers.CacheControl = "private, max-age=60";
         httpContext.Response.Headers.ETag = entityTag;

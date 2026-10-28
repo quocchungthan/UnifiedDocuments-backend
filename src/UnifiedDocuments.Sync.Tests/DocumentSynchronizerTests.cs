@@ -13,8 +13,10 @@ namespace UnifiedDocuments.Sync.Tests;
 
 public sealed class DocumentSynchronizerTests
 {
-    [Fact]
-    public async Task SyncAsync_accepts_a_substitute_source_and_indexes_its_document()
+    [Theory]
+    [InlineData("Repair order for VIN 1HGCM82633A004352", "1HGCM82633A004352")]
+    [InlineData("General workshop instructions without a vehicle number", null)]
+    public async Task SyncAsync_retains_indexed_metadata_with_or_without_a_detected_vin(string content, string? expectedVin)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -25,8 +27,7 @@ public sealed class DocumentSynchronizerTests
         await db.Database.EnsureCreatedAsync();
 
         var modifiedAt = DateTimeOffset.UtcNow;
-        var source = new FakeDocumentSource("TestProvider", "doc-1", modifiedAt,
-            "Repair order for VIN 1HGCM82633A004352");
+        var source = new FakeDocumentSource("TestProvider", "doc-1", modifiedAt, content);
         var synchronizer = new DocumentSynchronizer(
             db,
             new TextExtractor(
@@ -45,7 +46,7 @@ public sealed class DocumentSynchronizerTests
         Assert.Equal(new SyncResult("TestProvider", 1, 0, 0, 0), result);
         Assert.Equal("doc-1", stored.SourceDocumentId);
         Assert.Equal("repair-order.txt", stored.FileName);
-        Assert.Equal("1HGCM82633A004352", Assert.Single(stored.Vins).Vin);
+        Assert.Equal(expectedVin is null ? [] : new[] { expectedVin }, stored.Vins.Select(link => link.Vin));
         Assert.Equal(1, source.OpenCount);
     }
 

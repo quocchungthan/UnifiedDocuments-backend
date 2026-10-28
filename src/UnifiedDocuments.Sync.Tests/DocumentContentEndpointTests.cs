@@ -1,137 +1,101 @@
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using UnifiedDocuments.Data;
-using UnifiedDocuments.Data.Entities;
-using UnifiedDocuments.Endpoints;
-using UnifiedDocuments.Sync.Sources;
 
 namespace UnifiedDocuments.Sync.Tests;
 
 public sealed class DocumentContentEndpointTests
 {
-    [Fact]
-    public async Task GetContent_serves_inline_and_download_content_and_revalidates_without_refetching()
+    [Theory]
+    [InlineData(false, "inline")]
+    [InlineData(true, "attachment")]
+    public async Task GetContent_returns_original_bytes_and_expected_disposition(bool download, string disposition)
     {
-        var pdfContent = Encoding.UTF8.GetBytes("PDF bytes for 1HGCM82633A004352");
-        var largeContent = new byte[10 * 1024 * 1024 + 1];
-        Array.Fill(largeContent, (byte)'x');
-        var source = new FakeDocumentSource("Warranty", new Dictionary<string, byte[]>
-        {
-            ["WD-123"] = pdfContent,
-            ["WD-LARGE"] = largeContent,
-        });
-        await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        var content = Encoding.UTF8.GetBytes("PDF bytes for 1HGCM82633A004352");
+        var document = DocumentApiFixture.Document("claim form", content);
+        await using var api = await DocumentApiFixture.CreateAsync(document);
+        api.Source.Documents.Add(document.SourceDocumentId, content);
 
-        var builder = WebApplication.CreateBuilder();
-        builder.WebHost.UseUrls("http://127.0.0.1:0");
-        builder.Services.AddDbContext<UnifiedDocumentsDbContext>(options => options.UseSqlite(connection));
-        builder.Services.AddSingleton<IDocumentSource>(source);
-        builder.Services.AddMemoryCache(options => options.SizeLimit = 64 * 1024 * 1024);
+        using var response = await api.Client.GetAsync($"/documents/Warranty/claim%20form/content?download={download}");
 
-        await using var app = builder.Build();
-        app.MapVehicleDocumentsEndpoints();
-        await app.StartAsync();
-
-        try
-        {
-            await using (var scope = app.Services.CreateAsyncScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<UnifiedDocumentsDbContext>();
-                await db.Database.EnsureCreatedAsync();
-                db.SourceDocuments.AddRange(
-                    CreateDocument("WD-123", "claim form.pdf", "application/pdf", pdfContent),
-                    CreateDocument("WD-LARGE", "large-note.txt", "text/plain", largeContent));
-                await db.SaveChangesAsync();
-            }
-
-            var address = app.Services.GetRequiredService<IServer>()
-                .Features.Get<IServerAddressesFeature>()!
-                .Addresses.Single();
-            using var client = new HttpClient { BaseAddress = new Uri(address) };
-
-            using var viewResponse = await client.GetAsync("/documents/Warranty/WD-123/content");
-            Assert.Equal(StatusCodes.Status200OK, (int)viewResponse.StatusCode);
-            Assert.Equal("inline", viewResponse.Content.Headers.ContentDisposition?.DispositionType);
-            Assert.True(viewResponse.Headers.CacheControl?.Private);
-            Assert.Equal(TimeSpan.FromMinutes(15), viewResponse.Headers.CacheControl?.MaxAge);
-            Assert.Equal(pdfContent, await viewResponse.Content.ReadAsByteArrayAsync());
-            Assert.NotNull(viewResponse.Headers.ETag);
-            Assert.Equal(1, source.OpenCount);
-
-            using var conditionalRequest = new HttpRequestMessage(HttpMethod.Get, "/documents/Warranty/WD-123/content");
-            conditionalRequest.Headers.IfNoneMatch.Add(viewResponse.Headers.ETag!);
-            using var notModified = await client.SendAsync(conditionalRequest);
-            Assert.Equal(StatusCodes.Status304NotModified, (int)notModified.StatusCode);
-            Assert.Equal(1, source.OpenCount);
-
-            using var downloadResponse = await client.GetAsync("/documents/Warranty/WD-123/content?download=true");
-            Assert.Equal("attachment", downloadResponse.Content.Headers.ContentDisposition?.DispositionType);
-            Assert.Contains("claim%20form.pdf", downloadResponse.Content.Headers.GetValues("Content-Disposition").Single());
-            Assert.Equal(pdfContent, await downloadResponse.Content.ReadAsByteArrayAsync());
-            Assert.Equal(1, source.OpenCount);
-
-            using var missingResponse = await client.GetAsync("/documents/Warranty/unknown/content");
-            Assert.Equal(StatusCodes.Status404NotFound, (int)missingResponse.StatusCode);
-            Assert.Equal(1, source.OpenCount);
-
-            using var largeResponse = await client.GetAsync("/documents/Warranty/WD-LARGE/content");
-            Assert.Equal(largeContent, await largeResponse.Content.ReadAsByteArrayAsync());
-            Assert.Equal(2, source.OpenCount);
-
-            using var repeatedLargeResponse = await client.GetAsync("/documents/Warranty/WD-LARGE/content");
-            Assert.Equal(largeContent, await repeatedLargeResponse.Content.ReadAsByteArrayAsync());
-            Assert.Equal(3, source.OpenCount);
-        }
-        finally
-        {
-            await app.StopAsync();
-        }
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(disposition, response.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Contains("claim%20form.pdf", response.Content.Headers.GetValues("Content-Disposition").Single());
+        Assert.True(response.Headers.CacheControl?.Private);
+        Assert.Equal(TimeSpan.FromMinutes(15), response.Headers.CacheControl?.MaxAge);
+        Assert.Equal(content, await response.Content.ReadAsByteArrayAsync());
+        Assert.Equal($"\"{document.ContentHash}\"", response.Headers.ETag?.Tag);
+        Assert.Equal(1, api.Source.OpenCount);
     }
 
-    private static SourceDocument CreateDocument(string id, string fileName, string contentType, byte[] content) => new()
+    [Theory]
+    [InlineData("\"hash\"", false)]
+    [InlineData("W/\"hash\"", false)]
+    [InlineData("*", false)]
+    [InlineData("\"different\"", true)]
+    public async Task GetContent_revalidates_before_opening_source(string tag, bool shouldFetch)
     {
-        SourceName = "Warranty",
-        SourceDocumentId = id,
-        FileName = fileName,
-        ContentType = contentType,
-        BusinessKey = "WC-2025-0001",
-        ContentHash = Convert.ToHexStringLower(SHA256.HashData(content)),
-        LastSeenAt = DateTimeOffset.UtcNow,
-        IndexedAt = DateTimeOffset.UtcNow,
-    };
+        var content = Encoding.UTF8.GetBytes("original bytes");
+        var document = DocumentApiFixture.Document("claim", content);
+        document.ContentHash = "hash";
+        await using var api = await DocumentApiFixture.CreateAsync(document);
+        api.Source.Documents.Add("claim", content);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/documents/Warranty/claim/content");
+        request.Headers.IfNoneMatch.Add(tag == "*" ? EntityTagHeaderValue.Any : EntityTagHeaderValue.Parse(tag));
 
-    private sealed class FakeDocumentSource(string sourceName, IReadOnlyDictionary<string, byte[]> documents) : IDocumentSource
+        using var response = await api.Client.SendAsync(request);
+
+        Assert.Equal(shouldFetch ? HttpStatusCode.OK : HttpStatusCode.NotModified, response.StatusCode);
+        Assert.Equal(shouldFetch ? 1 : 0, api.Source.OpenCount);
+    }
+
+    [Theory]
+    [InlineData(10 * 1024 * 1024, 1)]
+    [InlineData(10 * 1024 * 1024 + 1, 2)]
+    public async Task GetContent_caches_only_documents_at_or_below_the_size_limit(int size, int expectedFetches)
     {
-        public string SourceName => sourceName;
-        public int OpenCount { get; private set; }
+        var content = new byte[size];
+        Array.Fill(content, (byte)'x');
+        await using var api = await DocumentApiFixture.CreateAsync(DocumentApiFixture.Document("claim", content));
+        api.Source.Documents.Add("claim", content);
 
-        public async IAsyncEnumerable<ListedDocument> ListAllAsync(
-            [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Yield();
-            yield break;
-        }
+        using var first = await api.Client.GetAsync("/documents/Warranty/claim/content");
+        using var second = await api.Client.GetAsync("/documents/Warranty/claim/content?download=true");
 
-        public Task<Stream> OpenAsync(string sourceDocumentId, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (!documents.TryGetValue(sourceDocumentId, out var content))
-                throw new KeyNotFoundException(sourceDocumentId);
-            OpenCount++;
-            return Task.FromResult<Stream>(new MemoryStream(content, writable: false));
-        }
+        Assert.Equal(content, await first.Content.ReadAsByteArrayAsync());
+        Assert.Equal(content, await second.Content.ReadAsByteArrayAsync());
+        Assert.Equal(expectedFetches, api.Source.OpenCount);
+    }
+
+    [Theory]
+    [InlineData("unknown", "Warranty")]
+    [InlineData("claim", "Disabled")]
+    public async Task GetContent_returns_not_found_for_unknown_documents_or_disabled_sources(string id, string source)
+    {
+        await using var api = await DocumentApiFixture.CreateAsync(
+            DocumentApiFixture.Document("claim", [], source: "Disabled"));
+
+        using var response = await api.Client.GetAsync($"/documents/{source}/{id}/content");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(0, api.Source.OpenCount);
+    }
+
+    [Theory]
+    [InlineData("text/html")]
+    [InlineData("image/svg+xml")]
+    [InlineData("application/json")]
+    public async Task GetContent_downloads_active_formats_instead_of_rendering_them(string contentType)
+    {
+        byte[] content = [1, 2, 3];
+        await using var api = await DocumentApiFixture.CreateAsync(
+            DocumentApiFixture.Document("claim", content, contentType));
+        api.Source.Documents.Add("claim", content);
+
+        using var response = await api.Client.GetAsync("/documents/Warranty/claim/content");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
     }
 }

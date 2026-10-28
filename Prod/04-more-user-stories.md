@@ -67,3 +67,81 @@ and brand are one home link to `/`. Clicking either returns to a fresh search
 page and removes the VIN query and any other URL parameters. A normal link
 already provides keyboard navigation and browser history, so this does not
 need another click handler or state-reset mechanism. And tiny further enhancements are coming.
+
+Before starting the last story, I stopped the running backend and checked the
+tests against Arrange, Act, Assert. The sync and extraction tests already
+separate their setup, action and expected result. The content endpoint test
+was doing several different scenarios in one method, though. I split those
+into focused cases and kept the local API, SQLite and fake-source setup in
+one disposable test helper. The tests still exercise the actual HTTP routes,
+not a second implementation of their logic.
+
+I also added cases around the behavior we could easily miss: weak and wildcard
+ETags must avoid opening the source, disabled sources must not serve content,
+active formats must download, and exactly 10 MiB is cacheable while 10 MiB
+plus one byte is not. This is the Boy Scout Rule applied to the test suite:
+make failures easier to explain before extending the next behavior.
+
+Now the third and last story is reviewing documents where no VIN was found.
+No detected VIN does not mean the document is invalid or should disappear.
+It can still be useful to the team, so sync keeps its metadata in the index
+without a VIN link. This story lists those records for review; it does not
+add manual VIN assignment or change the source document.
+
+The contract is `GET /documents/unlinked?cursor=...&pageSize=50`. It reads indexed records whose VIN
+links are empty, without calling any dealership system. Documents with one
+or several detected VINs are excluded. There is no new external-system
+contract or database schema needed here: the existing metadata and VIN links
+already answer the question.
+
+Unlinked documents can be a large set, so this endpoint must not return every
+record in one response. It returns `{ items, nextCursor }`, with 50 records by
+default and a maximum page size of 100. A null cursor means the end. Invalid
+page sizes and cursors return an explicit validation error.
+
+I reuse the same metadata fields, private 60-second cache headers and response
+ETag calculation as the VIN query. For unlinked pages, ordering is descending
+by modified date, falling back to indexed date, then by the unique index row
+ID. The opaque cursor carries the last date and row ID. This is keyset paging:
+the next query continues below that pair rather than skipping an increasing
+offset or counting the whole result set. Equal-date rows are not lost between
+pages. The existing VIN response remains an array.
+
+This is a live index, not a frozen export. Sync can add, remove or reclassify
+documents while someone reviews it. Newer or changed rows above the cursor
+are picked up on a fresh review; the UI also avoids appending a duplicate
+source/document identity if a changed row reappears below it.
+
+On the frontend, **Review unlinked documents** loads that endpoint without
+requiring a VIN. The URL becomes `/?view=unlinked`, so a reload or shared link
+opens the same view from its first page. The heading and empty state explain that no VIN was
+detected, and errors stay visible with a retry of the same query. VIN search
+returns to the normal results mode, while the brand link still goes home to
+`/`. Loading and error handling are shared instead of duplicated.
+
+The list reuses the existing source-labelled table and responsive View / print
+and Download actions. Both actions still point at our backend content proxy,
+not the dealership APIs. English and Vietnamese messages cover the new view.
+
+The added tests cover unlinked inclusion, linked and multi-VIN exclusion,
+empty results, metadata, deterministic date ordering and conditional HTTP
+responses, alongside VIN-query regression cases. A sync case also checks that
+a document without a VIN really remains indexed. Frontend tests cover the
+backend URL and contract, unlinked loading, direct-link restoration, empty
+and error states, retry, duplicate-request protection and returning to VIN
+search.
+
+The list loads another page when its bottom sentinel approaches the viewport.
+An IntersectionObserver is disconnected when its view changes or the component
+is destroyed. Requests are guarded so repeated scroll notifications cannot
+start duplicate loads. The table stays on screen while the next page loads,
+and the count says how many documents are loaded, not an invented total.
+A Load more button provides a keyboard-accessible alternative and still works
+if IntersectionObserver is unavailable. If a later page fails, the existing
+rows and cursor stay intact, automatic loading pauses, and Retry requests that
+same page. A null next cursor stops scrolling requests and shows the end state.
+
+The paging tests walk a set larger than two default pages, including equal
+dates, and verify bounded responses, no missing or duplicate rows, cursor
+validation and termination. Frontend cases check append, end-of-list,
+duplicate-request protection and preserving rows when a page must be retried.
