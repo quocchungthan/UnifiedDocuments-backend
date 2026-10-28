@@ -1,0 +1,6 @@
+@UnifiedDocuments_HostAddress = http://localhost:5268
+
+GET {{UnifiedDocuments_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
