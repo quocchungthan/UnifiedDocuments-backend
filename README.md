@@ -2,7 +2,7 @@
 
 The three external services are mocked in `DealershipSystems/`. With the .NET 10. See [DealershipSystems/README.md](DealershipSystems/README.md#run) for details.
 
-Then follow [Download the UI and run](./RUN.md) to install the UI bundle and
+Then follow [Download the UI and run](./RUN%20with%20UI.md) to install the UI bundle and
 start the application.
 
 ## Goal
