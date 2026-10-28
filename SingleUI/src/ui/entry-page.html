@@ -1,0 +1,36 @@
+<a class="skip-link button" href="#content" emfcSkipLink>{{ copy().skipToContent }}</a>
+<main id="content" tabindex="-1">
+  <header class="page-heading">
+    <div class="app-name">
+      <span class="app-mark" aria-hidden="true"></span>
+      <span>{{ messages().title }}</span>
+      <span class="entry-badge">{{ copy().preview }}</span>
+    </div>
+    <h1>{{ messages().heading }}</h1>
+    <p class="intro">{{ messages().introduction }}</p>
+  </header>
+  <section class="viewport panel" aria-labelledby="entry-heading">
+    <div class="panel-heading">
+      <h2 id="entry-heading">{{ messages().title }}</h2>
+      <span class="selection-status">{{ copy().availability }}</span>
+    </div>
+    <div class="empty-state">
+      <div class="model-symbol" aria-hidden="true">
+        <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="12" y="12" width="56" height="56" rx="12" />
+          <path d="M12 30h56 M30 30v38 M20 21h2 M27 21h2 M39 42h19 M39 50h14" />
+        </svg>
+      </div>
+      <h3>{{ messages().emptyHeading }}</h3>
+      <p>{{ messages().emptyDescription }}</p>
+    </div>
+    <footer class="viewport-footer">
+      <span>{{ copy().scopeHeading }}</span>
+      <ul>
+        @for (area of messages().areas; track area) {
+          <li>{{ area }}</li>
+        }
+      </ul>
+    </footer>
+  </section>
+</main>

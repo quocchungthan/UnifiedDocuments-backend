@@ -1,0 +1,211 @@
+<a class="skip button" href="#content" emfcSkipLink>{{ m().skip }}</a>
+<header class="app-header">
+  <a class="brand" href="/">
+    <span class="brand-icon" aria-hidden="true"><emfc-icon [icon]="CarFront" [size]="22" /></span>
+    <div>
+      <h1>{{ m().title }}</h1>
+      <p>{{ m().subtitle }}</p>
+    </div>
+  </a>
+  <a class="unlinked-action" href="/?view=unlinked" [attr.aria-current]="state.unlinked() ? 'page' : null">
+    {{ m().unlinkedResults }}
+  </a>
+</header>
+
+<main id="content" class="content" tabindex="-1">
+  <section class="search-section" aria-labelledby="search-heading">
+    <div class="search-copy">
+      <span class="eyebrow">{{ m().eyebrow }}</span>
+      <h2 id="search-heading">{{ m().heading }}</h2>
+      <p>{{ m().intro }}</p>
+    </div>
+    <form class="search-form" (submit)="submitSearch($event)" novalidate>
+      <label for="vehicle-vin">{{ m().vinLabel }}</label>
+      <div class="search-control">
+        <input
+          id="vehicle-vin"
+          name="vin"
+          type="text"
+          maxlength="17"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          role="combobox"
+          aria-autocomplete="list"
+          [disabled]="state.loading()"
+          [value]="state.vin()"
+          [placeholder]="m().placeholder"
+          [attr.aria-invalid]="state.invalidVin()"
+          [attr.aria-expanded]="state.identifiersOpen()"
+          [attr.aria-controls]="state.identifiersOpen() ? 'vin-options' : null"
+          [attr.aria-activedescendant]="state.activeIdentifier() >= 0 ? 'vin-option-' + state.activeIdentifier() : null"
+          aria-describedby="vin-hint"
+          (focus)="state.focusVin()"
+          (blur)="state.blurVin()"
+          (keydown)="identifierKeydown($event)"
+          (input)="updateVin($event)"
+        />
+        <button class="button" type="submit" [disabled]="state.loading()" [attr.aria-busy]="state.busy() && !state.unlinked()">
+          <emfc-icon [class.spin]="state.busy()" [icon]="Search" [size]="17" />
+          {{ state.busy() && !state.unlinked() ? m().searching : m().search }}
+        </button>
+      @if (state.identifiersOpen()) {
+        <div class="vin-suggestions" [attr.aria-busy]="state.identifiersLoading()">
+          @if (state.identifiersLoading()) {
+            <p class="vin-suggestions-message" role="status">{{ m().loadingIdentifiers }}...</p>
+          } @else if (state.identifiersError()) {
+            <p class="vin-suggestions-message vin-suggestions-error" role="status">
+              {{ m().identifierFailure }}: {{ state.identifiersError() }}
+            </p>
+          } @else if (state.identifiers().length > 0) {
+            <ul id="vin-options" role="listbox" [attr.aria-label]="m().vinSuggestions">
+              @for (identifier of state.identifiers(); track identifier; let index = $index) {
+                <li
+                  [id]="'vin-option-' + index"
+                  role="option"
+                  [attr.aria-selected]="state.activeIdentifier() === index"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="selectIdentifier(identifier)"
+                >{{ identifier }}</li>
+              }
+            </ul>
+          } @else {
+            <p class="vin-suggestions-message" role="status">{{ m().noIdentifierMatches }}</p>
+          }
+        </div>
+      }
+      </div>
+      <p id="vin-hint" class="vin-hint">{{ m().vinHint }}</p>
+      @if (state.invalidVin()) {
+        <p class="validation-message" role="alert">{{ m().invalidVin }}</p>
+      }
+    </form>
+  </section>
+
+  @if (state.busy()) {
+    <div class="loading-state" role="status" aria-live="polite">
+      <emfc-icon class="spin" [icon]="Search" [size]="18" />
+      <span>{{ state.unlinked() ? m().loadingUnlinked : m().searching }}...</span>
+    </div>
+  }
+
+  @if (state.error()) {
+    <div class="error-state" role="alert">
+      <emfc-icon [icon]="AlertCircle" [size]="18" />
+      <div>
+        <strong>{{ state.unlinked() ? m().unlinkedFailure : m().loadFailure }}</strong>
+        <span>{{ state.error() }}</span>
+      </div>
+      <button class="button button--secondary" type="button" [disabled]="state.busy()" (click)="state.retry()">
+        {{ m().retry }}
+      </button>
+    </div>
+  }
+
+  @if (state.searched() && !state.busy() && !state.error()) {
+    <section class="results-section" aria-labelledby="results-heading" [attr.aria-busy]="state.loadingMore()">
+      <div class="results-heading">
+        <div>
+          <h2 id="results-heading">{{ state.unlinked() ? m().unlinkedResults : m().results }}</h2>
+          <p>{{ state.unlinked() ? m().unlinkedHint : state.vin() }}</p>
+        </div>
+        <p class="results-count" role="status">
+          {{ state.documents().length }}
+          {{ state.unlinked() ? m().documentsLoaded : state.documents().length === 1 ? m().match : m().matches }}
+        </p>
+      </div>
+
+      @if (state.documents().length > 0) {
+        <div class="table-wrap" role="region" tabindex="0" [attr.aria-label]="state.unlinked() ? m().unlinkedResults : m().results">
+          <table class="document-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ m().file }}</th>
+                <th scope="col">{{ m().source }}</th>
+                <th scope="col">{{ m().reference }}</th>
+                <th scope="col">{{ m().modified }}</th>
+                <th scope="col">{{ m().actions }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (document of state.documents(); track document.sourceName + ':' + document.sourceDocumentId) {
+                <tr>
+                  <td [attr.data-label]="m().file">
+                    <span class="file-name">{{ document.fileName }}</span>
+                    <span class="file-type">{{ document.contentType }}</span>
+                  </td>
+                  <td [attr.data-label]="m().source">
+                    <span class="source-name">
+                      <emfc-icon [icon]="Database" [size]="15" />
+                      {{ document.sourceName }}
+                    </span>
+                  </td>
+                  <td class="reference" [attr.data-label]="m().reference">
+                    {{ document.businessKey || m().notProvided }}
+                  </td>
+                  <td class="modified" [attr.data-label]="m().modified">
+                    <span class="date-value">
+                      <emfc-icon [icon]="CalendarDays" [size]="14" />
+                      {{ formatDate(document.modifiedAt) }}
+                    </span>
+                  </td>
+                  <td class="document-actions" [attr.data-label]="m().actions">
+                    <a
+                      class="button button--secondary document-action"
+                      [href]="contentUrl(document)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      [attr.aria-label]="m().viewPrint + ': ' + document.fileName"
+                      [attr.title]="m().viewPrint"
+                    >
+                      <emfc-icon [icon]="Eye" [size]="17" />
+                      <span class="document-action-label">{{ m().viewPrint }}</span>
+                    </a>
+                    <a
+                      class="button button--secondary document-action"
+                      [href]="contentUrl(document, true)"
+                      [attr.aria-label]="m().download + ': ' + document.fileName"
+                      [attr.title]="m().download"
+                    >
+                      <emfc-icon [icon]="Download" [size]="17" />
+                      <span class="document-action-label">{{ m().download }}</span>
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (state.unlinked()) {
+          @if (state.nextCursor()) {
+            <div #loadMoreTrigger>
+              @if (state.moreError()) {
+                <p class="validation-message" role="alert">{{ m().moreFailure }}: {{ state.moreError() }}</p>
+              }
+              <button class="button button--secondary" type="button" [disabled]="state.loadingMore()" [attr.aria-busy]="state.loadingMore()" (click)="state.loadMore()">
+                {{ state.loadingMore() ? m().loadingUnlinked : state.moreError() ? m().retry : m().loadMore }}
+              </button>
+              @if (state.loadingMore()) {
+                <p role="status">{{ m().loadingUnlinked }}...</p>
+              }
+            </div>
+          } @else {
+            <p role="status">{{ m().allDocumentsLoaded }}</p>
+          }
+        }
+      } @else {
+        <div class="empty-state">
+          <emfc-icon [icon]="FileText" [size]="21" />
+          <div>
+            <strong>{{ state.unlinked() ? m().noUnlinked : m().noResults }}</strong>
+            <p>{{ state.unlinked() ? m().noUnlinkedHint : m().noResultsHint }}</p>
+          </div>
+        </div>
+      }
+    </section>
+  }
+</main>
+<footer class="app-footer">
+  <span>{{ m().uiCredit }}</span>
+  <a href="https://eldervibe.dev" target="_blank" rel="noopener noreferrer">eldervibe.dev</a>
+</footer>

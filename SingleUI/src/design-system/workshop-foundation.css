@@ -1,0 +1,20 @@
+/*
+ * Adapted from internet-facing sub/30s web/src/styles.css; see source.json.
+ * Geometry/typography follow 30s. Colors live only in palette.json, generated
+ * into palette.css (npm run palette); do not add color values here.
+ */
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --radius-md: 7px;
+  --radius-xl: 17px;
+  --ev-font-size-sm: 0.875rem;
+  --ev-font-size-base: 1rem;
+  --btn-soft-shadow: none;
+}

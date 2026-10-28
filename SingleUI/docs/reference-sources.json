@@ -1,0 +1,23 @@
+[
+  {
+    "app": "car-3d-models",
+    "revision": "6881b93",
+    "usage": "Layout, catalog, books and attributed photo reference. Its CSS is also the selected shared design-system source; see src/design-system/source.json for the adaptation. No React runtime shipped.",
+    "source": "30s/web/src/styles.css",
+    "sha256": "4ac8e1481a6384047e3936470ecc5a00c6adefa8bce87d22c574d115240a13b4"
+  },
+  {
+    "app": "para-ai",
+    "revision": "c8bc62f",
+    "usage": "Layout and Bridge API contract reference. No source CSS or React runtime shipped.",
+    "source": "PARA-AI-solution/web/src/styles.css",
+    "sha256": "2100d152627650b5bd19d076695b98fb8200ed62372d1d52ba9ae091ed2d015e"
+  },
+  {
+    "app": "farm",
+    "revision": "909df7f",
+    "usage": "Default Microsoft-tab layout and API contract reference. No source CSS or React runtime shipped.",
+    "source": "internet-facing/Farm.Microsoft/src/themes/microsoft/microsoft.scss",
+    "sha256": "0b90de16f706143aab3aa2cdb24da2caddbd1ae9279f06f6990be519caeac1b0"
+  }
+]

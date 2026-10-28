@@ -1,0 +1,19 @@
+:root {
+  --emfc-font-sans: var(--font-sans);
+  --emfc-font-mono: var(--font-mono);
+  --emfc-space-1: var(--space-1);
+  --emfc-space-2: var(--space-2);
+  --emfc-space-3: var(--space-3);
+  --emfc-space-4: var(--space-4);
+  --emfc-space-5: var(--space-5);
+  --emfc-space-6: var(--space-6);
+  --emfc-space-8: var(--space-8);
+  --emfc-space-12: var(--space-12);
+  --emfc-radius-sm: var(--radius-md);
+  --emfc-radius-lg: var(--radius-xl);
+  /* Concentric corners: a surface inset by space-3 inside a radius-lg container. */
+  --emfc-radius-nested: max(4px, calc(var(--radius-xl) - var(--space-3)));
+  --emfc-text-sm: var(--ev-font-size-sm);
+  --emfc-text-base: var(--ev-font-size-base);
+  --emfc-text-lg: 1.125rem;
+}

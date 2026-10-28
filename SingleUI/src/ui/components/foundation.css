@@ -1,0 +1,221 @@
+/* Portable component contracts; Angular wrappers use the same classes.
+   Keep shared typography and check rendered text/background and meaningful
+   control/focus-outline contrast in both themes: default, hover, active/pressed,
+   selected, focus-visible, disabled, loading and error; include long translations. */
+:where(.glass, .panel) {
+  background: var(--emfc-surface);
+  border: 1px solid var(--emfc-line);
+  border-radius: var(--emfc-radius-lg);
+}
+.glass {
+  background: var(--color-glass);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(16px);
+}
+html :where(h1, h2, h3, .eyebrow, .brand-mark, .brand-caption) {
+  font-family: var(--font-display);
+}
+:where(.icon-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: var(--emfc-radius-sm);
+  background: transparent;
+  color: var(--emfc-ink);
+  cursor: pointer;
+}
+:where(.icon-button):hover:not(:disabled),
+:where(.icon-button)[aria-pressed='true'],
+:where(.icon-button)[aria-expanded='true'] {
+  background: var(--emfc-accent-soft);
+  color: var(--emfc-on-accent-soft);
+}
+:where(.icon-button):active:not(:disabled) {
+  background: var(--emfc-surface-alt);
+  color: var(--emfc-ink);
+}
+:where(.primary-button, .button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--emfc-space-2);
+  min-height: 44px;
+  padding: var(--emfc-space-2) var(--emfc-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--emfc-radius-sm);
+  background: var(--color-action);
+  color: var(--color-action-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+.button--secondary {
+  background: var(--emfc-surface);
+  color: var(--emfc-ink);
+  border-color: var(--emfc-control-line);
+}
+.primary-button:hover:not(:disabled) {
+  background: var(--color-action-hover);
+}
+.primary-button:active:not(:disabled) {
+  background: var(--color-action-active);
+}
+:where(button):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+:where(.panel-heading) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--emfc-space-3);
+}
+.panel-heading h2 {
+  min-width: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+:where(.input, .textarea, .select) {
+  min-height: 44px;
+  max-width: 100%;
+  padding: var(--emfc-space-2) var(--emfc-space-3);
+  border: 1px solid var(--emfc-control-line);
+  border-radius: var(--emfc-radius-sm);
+  color: var(--emfc-ink);
+  background: var(--emfc-surface);
+  font: inherit;
+}
+:where(.segmented, .detail-tabs, .view-switch) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--emfc-space-1);
+  padding: var(--emfc-space-1);
+}
+:where(.segmented, .detail-tabs, .view-switch) > button {
+  min-height: 44px;
+  padding: var(--emfc-space-2) var(--emfc-space-3);
+  border: 0;
+  border-radius: var(--emfc-radius-sm);
+  color: var(--emfc-muted);
+  background: transparent;
+  cursor: pointer;
+}
+:where(.segmented, .detail-tabs, .view-switch) > button[aria-pressed='true'] {
+  color: var(--emfc-on-accent);
+  background: var(--emfc-accent);
+}
+:where(.segmented, .detail-tabs, .view-switch)
+  > button:hover:not(:disabled):not([aria-pressed='true']) {
+  background: var(--emfc-accent-soft);
+  color: var(--emfc-on-accent-soft);
+}
+:where(.eyebrow) {
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--emfc-muted);
+}
+:where(.error, .safety-note, .notice) {
+  padding: var(--emfc-space-3);
+  border-left: 3px solid var(--emfc-accent);
+  background: var(--emfc-surface-alt);
+  color: var(--emfc-ink);
+}
+:where(.icon) {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+}
+:where(.skip) {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-200%);
+  z-index: 200;
+}
+:where(.skip):focus {
+  transform: none;
+  background: var(--emfc-surface);
+  padding: var(--emfc-space-3);
+}
+.table-wrap {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.table :where(td, th) {
+  padding: var(--emfc-space-3);
+  vertical-align: top;
+  border-bottom: 1px solid var(--emfc-line);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--emfc-space-4);
+}
+.card {
+  padding: var(--emfc-space-6);
+}
+.stack {
+  display: grid;
+  gap: var(--emfc-space-4);
+}
+:where(.stack, .grid) > * {
+  min-width: 0;
+}
+.chip {
+  display: inline-flex;
+  padding: var(--emfc-space-1) var(--emfc-space-2);
+  border: 1px solid var(--emfc-line);
+  border-radius: var(--emfc-radius-sm);
+  color: var(--emfc-muted);
+  font-size: var(--emfc-text-sm);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: var(--emfc-space-6);
+  border: 1px solid var(--emfc-control-line);
+  border-radius: var(--emfc-radius-lg);
+  background: var(--emfc-surface);
+  color: var(--emfc-ink);
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+.dialog textarea {
+  width: 100%;
+}
+/* Icons inherit text color, so contrast follows their label/control role. */
+.icon-glyph {
+  display: inline-flex;
+  flex: none;
+  width: var(--icon-size, 18px);
+  height: var(--icon-size, 18px);
+}
+.icon-glyph > svg {
+  width: 100%;
+  height: 100%;
+}

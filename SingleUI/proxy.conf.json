@@ -1,0 +1,10 @@
+{
+  "/vehicles/**": {
+    "target": "http://localhost:5268",
+    "secure": false
+  },
+  "/documents/**": {
+    "target": "http://localhost:5268",
+    "secure": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "mail": {
+    "repository": "quocchungthan/internet-facing",
+    "revision": "5e4b7d76e73ca98b80f992f9299ca6adc0c06c2d"
+  },
+  "note": {
+    "image": "ghcr.io/toeverything/affine@sha256:c312116a134184947d98749c8a8e29f4e3bc97f4f2a51c9a3497f9baea2eec2b"
+  },
+  "storage": {
+    "image": "seafileltd/seafile-mc:11.0.12"
+  }
+}

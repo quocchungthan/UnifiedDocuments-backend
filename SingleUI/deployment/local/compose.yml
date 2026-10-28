@@ -1,0 +1,118 @@
+name: singleui-skins
+
+services:
+  mail:
+    profiles: [mail-reference]
+    build:
+      context: ${MAIL_SOURCE_DIR:-../../.local/mail-reference-unprepared}
+    image: singleui-mail:local
+    environment:
+      SECRET_KEY: ${MAIL_SESSION_SECRET:-}
+      MAIL_DOMAIN: mail.localhost
+      MAIL_HOSTNAME: mail.localhost
+      OAUTH_CLIENT_ID: mail-local
+      OAUTH_CLIENT_SECRET: ''
+    ports:
+      - '127.0.0.1:8111:8000'
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+
+  note-db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: affine
+      POSTGRES_DB: affine
+      POSTGRES_PASSWORD: ${NOTE_DB_PASSWORD:?Run skins:prepare}
+    volumes:
+      - note-db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD, pg_isready, -U, affine, -d, affine]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  note-cache:
+    image: redis:7-alpine
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  note-migration:
+    image: ${AFFINE_BASE:-ghcr.io/toeverything/affine:stable}
+    environment: &note-environment
+      REDIS_SERVER_HOST: note-cache
+      DATABASE_URL: postgresql://affine:${NOTE_DB_PASSWORD}@note-db:5432/affine
+      DEPLOYMENT_TYPE: selfhosted
+      AFFINE_SERVER_EXTERNAL_URL: http://localhost:8112
+    volumes: &note-volumes
+      - note-storage:/root/.affine/storage
+      - note-config:/root/.affine/config
+    command: [sh, -c, node ./scripts/self-host-predeploy.js]
+    depends_on:
+      note-db: { condition: service_healthy }
+      note-cache: { condition: service_healthy }
+
+  note:
+    build:
+      context: ../..
+      dockerfile: deployment/local/note/Dockerfile
+      args:
+        AFFINE_BASE: ${AFFINE_BASE:-ghcr.io/toeverything/affine:stable}
+    image: singleui-note:local
+    environment: *note-environment
+    volumes: *note-volumes
+    ports:
+      - '127.0.0.1:8112:3010'
+    depends_on:
+      note-migration: { condition: service_completed_successfully }
+      note-db: { condition: service_healthy }
+      note-cache: { condition: service_healthy }
+
+  storage-db:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${STORAGE_DB_PASSWORD:?Run skins:prepare}
+      MYSQL_LOG_CONSOLE: 'true'
+      MARIADB_AUTO_UPGRADE: '1'
+    volumes:
+      - storage-db:/var/lib/mysql
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  storage-cache:
+    image: memcached:1.6-alpine
+    entrypoint: [memcached, -m, '128']
+    networks:
+      default:
+        aliases: [memcached]
+
+  storage:
+    image: seafileltd/seafile-mc:11.0.12
+    environment:
+      DB_HOST: storage-db
+      DB_ROOT_PASSWD: ${STORAGE_DB_PASSWORD}
+      TIME_ZONE: UTC
+      SEAFILE_ADMIN_EMAIL: admin@example.invalid
+      SEAFILE_ADMIN_PASSWORD: ${STORAGE_ADMIN_PASSWORD:?Run skins:prepare}
+      SEAFILE_SERVER_LETSENCRYPT: 'false'
+      SEAFILE_SERVER_HOSTNAME: '127.0.0.1'
+    volumes:
+      - storage-data:/shared
+    ports:
+      - '127.0.0.1:${SKIN_STORAGE_PORT:-8113}:80'
+    depends_on:
+      storage-db: { condition: service_healthy }
+      storage-cache: { condition: service_started }
+
+volumes:
+  note-db:
+  note-config:
+  note-storage:
+  storage-db:
+  storage-data:

@@ -1,0 +1,79 @@
+/* Shared motion: short, meaningful feedback only; disabled with reduced motion. */
+:root {
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+:where(
+  .button,
+  .primary-button,
+  .icon-button,
+  .side-nav a,
+  .side-nav button,
+  .segmented > button,
+  .badge,
+  .metric,
+  .table tbody tr
+) {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease);
+}
+:where(.button, .primary-button, .icon-button):active:not(:disabled) {
+  transform: scale(0.97);
+}
+.metric:hover {
+  border-color: var(--emfc-control-line);
+}
+.reveal {
+  animation: reveal-in var(--motion-base) var(--motion-ease) both;
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+.spin {
+  animation: spin 900ms linear infinite;
+}
+/* Pointer spotlight (emfcSpotlight): decorative tint only; text keeps its surface contrast. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in srgb, var(--emfc-accent) 12%, transparent),
+    transparent 70%
+  );
+  transition: opacity var(--motion-base) var(--motion-ease);
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

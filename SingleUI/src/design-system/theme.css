@@ -1,0 +1,27 @@
+/*
+ * Compatibility aliases consume generated palette.css roles (source: palette.json); no app palettes.
+ * Use shared typography. Check actual text/background and control/focus-outline
+ * contrast in both themes: default, hover, active/pressed, selected,
+ * focus-visible, disabled, loading and error. Recheck translated labels.
+ */
+:root {
+  --emfc-canvas: var(--color-canvas);
+  --emfc-surface: var(--color-raised);
+  --emfc-surface-alt: var(--color-surface);
+  --emfc-code-surface: var(--color-surface);
+  --emfc-ink: var(--color-ink);
+  --emfc-muted: var(--color-muted);
+  --emfc-line: var(--color-line);
+  --emfc-control-line: var(--color-muted);
+  --emfc-accent: var(--color-accent-hover);
+  --emfc-accent-hover: var(--color-accent-active);
+  --emfc-on-accent: var(--color-accent-ink);
+  --emfc-accent-soft: var(--color-accent-soft);
+  --emfc-on-accent-soft: var(--color-accent-soft-ink);
+  --emfc-focus: var(--color-focus);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --emfc-code-surface: var(--color-canvas);
+  }
+}

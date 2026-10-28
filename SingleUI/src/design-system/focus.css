@@ -1,0 +1,11 @@
+/* Keep focus outlines >=3:1 against adjacent backgrounds in both system themes. */
+html :is(a, button, input, select, textarea, [role='button']):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* Programmatic skip/route targets (tabindex=-1) are not controls; avoid a framed page. */
+html [tabindex='-1']:focus:not(:focus-visible),
+html :is(main, section, article, h1, h2)[tabindex='-1']:focus {
+  outline: none;
+}

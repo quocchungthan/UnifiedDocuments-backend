@@ -1,0 +1,67 @@
+/* Shared fonts only; verify text >=4.5:1 and meaningful outlines/focus >=3:1
+   against adjacent backgrounds in both themes: default, hover, active/pressed,
+   selected, focus-visible, disabled, loading and error. Recheck long translations. */
+:root {
+  --emfc-button-bg: var(--color-action);
+  --emfc-button-hover: var(--color-action-hover);
+  --emfc-button-active: var(--color-action-active);
+  --emfc-button-ink: var(--color-action-ink);
+  --emfc-panel-bg: var(--emfc-surface);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--emfc-space-2);
+  min-height: 44px;
+  padding: var(--emfc-space-2) var(--emfc-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--emfc-radius-sm);
+  background: var(--emfc-button-bg);
+  color: var(--emfc-button-ink);
+  font: inherit;
+  font-weight: 600;
+  box-shadow: var(--btn-shadow);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--emfc-button-hover);
+}
+.button:active:not(:disabled) {
+  background: var(--emfc-button-active);
+}
+
+.button--secondary {
+  --emfc-button-bg: var(--emfc-surface);
+  --emfc-button-hover: var(--emfc-surface-alt);
+  --emfc-button-active: var(--emfc-accent-soft);
+  --emfc-button-ink: var(--emfc-ink);
+  border-color: var(--emfc-control-line);
+  box-shadow: var(--btn-soft-shadow);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.panel {
+  border: 1px solid var(--emfc-line);
+  border-radius: var(--emfc-radius-lg);
+  background: var(--emfc-panel-bg);
+  box-shadow: var(--card-highlight), var(--shadow-card);
+}
+
+.select {
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid var(--emfc-control-line);
+  border-radius: var(--emfc-radius-sm);
+  padding: var(--emfc-space-2) var(--emfc-space-3);
+  background: var(--emfc-surface);
+  color: var(--emfc-ink);
+  font: inherit;
+}

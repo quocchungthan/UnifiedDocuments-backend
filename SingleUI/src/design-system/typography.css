@@ -1,0 +1,13 @@
+/*
+ * Keep sans/monospace roles identical across apps and host skins; no per-app fonts.
+ * Check rendered text/background contrast >=4.5:1 and meaningful control/focus
+ * outlines >=3:1 against adjacent surfaces in both system themes. Recheck hover,
+ * active/pressed, selected, focus-visible, disabled, loading/error and long labels.
+ */
+html:root {
+  --font-sans:
+    'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Space Grotesk', 'DM Sans', system-ui, sans-serif;
+}

@@ -1,0 +1,320 @@
+/* Use shared font roles, preserving native icon fonts. Verify actual text >=4.5:1
+   and meaningful control/focus outlines >=3:1 against adjacent surfaces in both
+   themes; inherited tokens alone do not prove native child styles are readable. */
+:root {
+  --primary-color: var(--color-accent-hover);
+  --primary-text-color: var(--color-accent-ink);
+  --primary-color-darken: var(--color-accent-active);
+  --primary-color-more-darken: var(--color-accent-active);
+  --primary-light-10: var(--color-accent-soft);
+  --main-bg: var(--color-canvas);
+  --dark-bg: var(--color-raised);
+  --light-bg: var(--color-surface);
+  --main-font: var(--color-ink);
+  --light-font: var(--color-muted);
+  --main-theme: var(--color-accent-hover);
+  --theme-font: var(--color-ink);
+}
+body {
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+.btn-primary,
+.btn-primary:focus,
+.submit,
+.submit:focus {
+  background: var(--color-action);
+  border-color: var(--color-action);
+  color: var(--color-action-ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--btn-shadow);
+}
+.btn-primary:focus,
+.submit:focus {
+  box-shadow: none;
+}
+.btn-primary:hover:not(:disabled):not(.disabled),
+.submit:hover:not(:disabled) {
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
+  color: var(--color-action-ink);
+}
+.btn-primary:active:not(:disabled):not(.disabled),
+.submit:active:not(:disabled) {
+  background: var(--color-action-active);
+  border-color: var(--color-action-active);
+  color: var(--color-action-ink);
+}
+#wrapper:has(.login-panel) {
+  background: var(--color-canvas);
+}
+.login-panel {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--card-highlight), var(--shadow-card);
+}
+.login-panel-hd {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+.login-panel input:not([type='checkbox']):not([type='hidden']) {
+  min-height: 44px;
+  background: var(--color-raised);
+  border-color: var(--color-muted);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+}
+.login-panel input::placeholder {
+  color: var(--color-muted);
+}
+.login-panel label,
+.login-panel .vam {
+  color: var(--color-ink);
+}
+.login-panel-bottom-container a {
+  color: var(--color-accent-hover);
+}
+.login-panel .submit {
+  min-height: 44px;
+}
+/* Keep Seafile's original logo artwork readable in either appearance. */
+.login-panel-logo,
+.side-panel-north img[alt='logo'] {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 4px;
+}
+.side-panel,
+.side-panel-north,
+.side-panel-center,
+.side-panel-footer {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+.main-panel,
+.main-panel-center {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+.main-panel-north,
+.cur-view-toolbar {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+.side-panel a,
+.main-panel a:not(.btn) {
+  color: var(--color-accent-hover);
+}
+.side-panel .nav-link {
+  color: var(--color-ink);
+}
+.side-panel .nav-link:hover,
+.side-panel .nav-link.active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+}
+.main-panel :is(th, td),
+.side-panel-footer {
+  border-color: var(--color-line);
+}
+.main-panel th {
+  color: var(--color-muted);
+}
+.main-panel tr:hover td {
+  background: var(--color-surface-hover);
+}
+.btn-secondary,
+.form-control {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-muted);
+  border-radius: var(--radius-md);
+}
+.btn-secondary:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
+}
+.modal-content {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+.modal-header,
+.modal-footer {
+  border-color: var(--color-line);
+}
+.modal-content :is(label, .modal-title, .close) {
+  color: var(--color-ink);
+  text-shadow: none;
+}
+.side-panel .nav-pills .nav-link,
+.side-panel .nav-pills .nav-text,
+.side-panel h3,
+.main-panel td {
+  color: var(--color-ink);
+}
+.cur-view-path,
+.cur-view-path .sf-heading,
+.side-panel-footer-inner {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+.side-panel .side-nav-footer {
+  background: var(--color-surface);
+}
+.side-panel .side-panel-footer .side-nav-footer a.item {
+  /* Seahub marks its fixed footer link color important. */
+  color: var(--color-muted) !important;
+}
+.modal-content .form-control,
+.modal-content .form-control:focus {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-muted);
+  box-shadow: none;
+}
+.modal-content .btn-primary,
+.modal-content .btn-primary.disabled,
+.modal-content .btn-primary:disabled {
+  background: var(--color-action);
+  border-color: var(--color-action);
+  color: var(--color-action-ink);
+}
+.modal-content .btn-primary:hover:not(:disabled):not(.disabled) {
+  background: var(--color-action-hover);
+  color: var(--color-action-ink);
+}
+.modal-content .btn-primary:active:not(:disabled):not(.disabled) {
+  background: var(--color-action-active);
+  color: var(--color-action-ink);
+}
+
+/* Native component styles load after branding CSS. Pair their nested surfaces
+   and state foregrounds explicitly; do not recolor authored document content. */
+:root .sf-popover,
+:root .dropdown-menu,
+:root .mobile-operation-menu,
+:root .file-details-container {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+  box-shadow: var(--shadow-card);
+}
+:root .sf-popover :is(.item, .txt, p),
+:root .dropdown-menu :is(.dropdown-item, a),
+:root .mobile-operation-menu a {
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+:root .sf-popover :is(a.item, a.sf-popover-item):is(:hover, :focus-visible),
+:root .dropdown-menu :is(.dropdown-item, a):is(:hover, :focus-visible) {
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
+}
+:root .sf-popover :is(a.item, a.sf-popover-item):active,
+:root .dropdown-menu :is(.dropdown-item, a):is(:active, .active) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+}
+:root .sf-popover .up-outer-caret {
+  border-bottom-color: var(--color-line);
+}
+:root .sf-popover .up-outer-caret .inner-caret {
+  border-bottom-color: var(--color-raised);
+}
+:root #quota-bar {
+  background: var(--color-surface);
+  border-color: var(--color-muted);
+}
+:root #quota-usage {
+  background: var(--color-accent-hover);
+}
+:root .side-panel .nav-pills .nav-link:is(:hover, :active, .active),
+:root .side-panel .nav-pills .nav-link:is(:hover, :active, .active) :is(.nav-text, .nav-icon) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+}
+:root .main-panel .cur-view-path,
+:root .main-panel .cur-view-path .sf-heading {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+:root .main-panel-north,
+:root .common-toolbar,
+:root .cur-view-toolbar,
+:root .main-panel .main-panel-north :is(.cur-view-toolbar, .common-toolbar) {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+:root .main-panel :is(.item-meta-info, .text-secondary, .op-icon, .action-icon),
+:root .sf-md-viewer-topbar :is(.file-star .star, .file-modifier-savedraft) {
+  color: var(--color-muted);
+}
+:root .main-panel tr:is(:hover, .tr-highlight),
+:root .main-panel tr:is(:hover, .tr-highlight) > td {
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
+}
+:root .main-panel tr.tr-active {
+  /* Seahub's native selected-row surface is important. */
+  background: var(--color-accent-soft) !important;
+}
+:root .main-panel tr.tr-active > td,
+:root .main-panel tr.tr-active > td :is(a, .op-icon, .action-icon) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+}
+:root .file-view-header,
+:root .sf-md-viewer-topbar :is(.sf-md-viewer-topbar-first, .sf-md-viewer-topbar-first-narrow) {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+:root :is(.file-view-header, .sf-md-viewer-topbar) :is(.file-title, .file-name) {
+  color: var(--color-ink);
+}
+:root :is(.file-view-header, .sf-md-viewer-topbar) :is(.meta-info, .file-state, .file-star) {
+  color: var(--color-muted);
+}
+:root .btn-secondary:is(:active, .active, .btn-active, [aria-pressed='true']),
+:root .show > .btn-secondary.dropdown-toggle {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+  border-color: var(--color-muted);
+}
+:root .sf-slate-editor-toolbar {
+  /* The native editor declares its toolbar background important. */
+  background-color: var(--color-raised) !important;
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+:root .sf-slate-editor-toolbar :is(button, .dropdown-toggle) {
+  background: var(--color-raised);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+:root .sf-slate-editor-toolbar :is(button, .dropdown-toggle):hover {
+  background: var(--color-surface-hover);
+  color: var(--color-ink);
+}
+:root .sf-slate-editor-toolbar :is(button, .dropdown-toggle):is(:active, [aria-pressed='true']) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-soft-ink);
+}
+:root .sf-slate-editor-toolbar .sf-icon-btn-disabled {
+  color: var(--color-muted);
+  opacity: 1;
+}
+:root .sf-slate-editor-toolbar :is(.iconfont, .fa, .fas, .far) {
+  color: inherit;
+}

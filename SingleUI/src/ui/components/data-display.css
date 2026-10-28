@@ -1,0 +1,193 @@
+/* Data-dense kit: metric tiles, badges, avatars, side navigation, empty/loading
+   states. Tones reuse palette roles only; meaning is never carried by color alone
+   (pair a tone with an icon or label). Check contrast for every tone in both themes. */
+.table th {
+  color: var(--emfc-muted);
+  font-size: var(--emfc-text-sm);
+  font-weight: 600;
+}
+.table thead th {
+  white-space: nowrap;
+}
+.table tbody th {
+  overflow-wrap: anywhere;
+}
+.table tbody tr:hover {
+  background: var(--emfc-surface-alt);
+}
+.table :where(.num) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 168px), 1fr));
+  gap: var(--emfc-space-3);
+}
+.metric {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  align-content: start;
+  column-gap: var(--emfc-space-3);
+  padding: var(--emfc-space-4);
+  border: 1px solid var(--emfc-line);
+  border-radius: var(--emfc-radius-lg);
+  background: var(--emfc-surface);
+}
+.metric__icon {
+  grid-row: span 2;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--emfc-radius-sm);
+  background: var(--emfc-accent-soft);
+  color: var(--emfc-on-accent-soft);
+}
+.metric__value {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.metric__label {
+  color: var(--emfc-muted);
+  font-size: var(--emfc-text-sm);
+}
+.metric__hint {
+  grid-column: 2;
+  color: var(--emfc-muted);
+  font-size: 0.75rem;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 0 var(--emfc-space-2);
+  border-radius: 999px;
+  background: var(--emfc-surface-alt);
+  color: var(--emfc-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge[data-tone='accent'] {
+  background: var(--emfc-accent-soft);
+  color: var(--emfc-on-accent-soft);
+}
+.badge[data-tone='error'] {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--avatar-size, 32px);
+  height: var(--avatar-size, 32px);
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--emfc-accent-soft);
+  color: var(--emfc-on-accent-soft);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--emfc-space-2);
+}
+.toolbar > .spacer {
+  flex: 1;
+}
+.side-nav {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+}
+.side-nav a,
+.side-nav button {
+  display: flex;
+  align-items: center;
+  gap: var(--emfc-space-3);
+  min-height: 40px;
+  padding: 0 var(--emfc-space-3);
+  border: 0;
+  border-radius: var(--emfc-radius-sm);
+  background: transparent;
+  color: var(--emfc-muted);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.side-nav :where(a, button):hover {
+  background: var(--emfc-surface-alt);
+  color: var(--emfc-ink);
+}
+.side-nav :where(a, button)[aria-current='page'],
+.side-nav :where(a, button)[aria-current='true'] {
+  background: var(--emfc-accent-soft);
+  color: var(--emfc-on-accent-soft);
+  font-weight: 600;
+}
+.side-nav .count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 760px) {
+  .side-nav {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+  }
+}
+.empty-block {
+  display: grid;
+  justify-items: center;
+  gap: var(--emfc-space-2);
+  padding: var(--emfc-space-8) var(--emfc-space-4);
+  color: var(--emfc-muted);
+  text-align: center;
+}
+.empty-block > .icon-glyph {
+  color: var(--emfc-accent);
+}
+.empty-block strong {
+  color: var(--emfc-ink);
+}
+.skeleton {
+  display: block;
+  min-height: 1em;
+  border-radius: var(--emfc-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--emfc-surface-alt) 25%,
+    var(--emfc-line) 50%,
+    var(--emfc-surface-alt) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-wave {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

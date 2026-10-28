@@ -1,0 +1,14 @@
+/* MailBox already loads Farm's base elements. Keep its native layout.
+   Use shared font roles; verify actual text/background and control/focus-outline
+   contrast in both themes. Do not hide errors or alter icon fonts. */
+.button:not(.ghost) {
+  background: var(--color-action);
+  border-color: var(--color-action);
+  color: var(--color-action-ink);
+}
+.button:not(.ghost):hover:not(:disabled) {
+  background: var(--color-action-hover);
+}
+.button:not(.ghost):active:not(:disabled) {
+  background: var(--color-action-active);
+}

@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+@import './design-system/palette.css';
+@import './design-system/workshop-foundation.css';
+@import './design-system/font-faces.css';
+@import './design-system/typography.css';
+@import './design-system/focus.css';
+@import './design-system/primitives.css';
+@import './design-system/theme.css';
+@import './design-system/controls.css';
+@import './ui/components.css';
+
+html {
+  font-family: var(--emfc-font-sans);
+  font-size: 16px;
+  color: var(--emfc-ink);
+  background: var(--emfc-canvas);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+button,
+select,
+textarea {
+  font: inherit;
+}
+a {
+  color: var(--emfc-accent);
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "application": "30s",
+  "repository": "quocchungthan/internet-facing",
+  "branch": "sub/30s",
+  "revision": "6881b93107f3ee8178500d075dd56492a0638784",
+  "source": "web/src/styles.css",
+  "sha256": "11391ce0fa13e94e3ce481ac3dca3e0ec5b4e4b4d618e74b7ef287c7d7b83425",
+  "foundationSha256": "12c212223db580e6fec4302dfc9c25c8370168bfe6a23c9c57cf9467a8219356",
+  "palette": {
+    "name": "French Flat UI · warm column",
+    "source": "https://flatuicolors.com/palette/fr",
+    "definition": "src/design-system/palette.json"
+  },
+  "transformation": "Retained 30s glass geometry and typography only. All colors come from palette.json (user-selected warm French Flat UI column) via generated palette.css; contrast-safe derived text/state shades. Not a byte-for-byte stylesheet copy. App viewport layouts and remote font import are not copied."
+}

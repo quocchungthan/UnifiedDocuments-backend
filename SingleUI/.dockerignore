@@ -1,0 +1,8 @@
+**
+!dist-ui/
+!dist-ui/affine.css
+!deployment/
+!deployment/local/
+!deployment/local/note/
+!deployment/local/note/Dockerfile
+!deployment/local/note/install-style.mjs

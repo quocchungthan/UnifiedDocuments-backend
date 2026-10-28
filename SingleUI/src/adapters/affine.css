@@ -1,0 +1,129 @@
+/* Keep UI fonts consistent with shared typography; preserve document/icon fonts.
+   Verify actual text/background and control/focus-outline contrast in both
+   themes, including nested host theme roots, menus and dialogs. */
+:root,
+html:root[data-theme] {
+  --background: from var(--color-canvas) h s l;
+  --foreground: from var(--color-ink) h s l;
+  --card: from var(--color-raised) h s l;
+  --card-foreground: from var(--color-ink) h s l;
+  --popover: from var(--color-raised) h s l;
+  --popover-foreground: from var(--color-ink) h s l;
+  --primary: from var(--color-accent-hover) h s l;
+  --primary-foreground: from var(--color-accent-ink) h s l;
+  --secondary: from var(--color-surface) h s l;
+  --secondary-foreground: from var(--color-ink) h s l;
+  --muted: from var(--color-surface) h s l;
+  --muted-foreground: from var(--color-muted) h s l;
+  --accent: from var(--color-accent-soft) h s l;
+  --accent-foreground: from var(--color-accent-active) h s l;
+  --border: from var(--color-line) h s l;
+  --input: from var(--color-muted) h s l;
+  --ring: from var(--color-focus) h s l;
+  --affine-font-family: var(--font-sans);
+  --affine-font-base: var(--font-sans);
+  --affine-brand-color: var(--color-accent-hover);
+  --affine-primary-color: var(--color-accent-hover);
+  --affine-link-color: var(--color-accent-hover);
+  --affine-text-primary-color: var(--color-ink);
+  --affine-text-secondary-color: var(--color-muted);
+  --affine-border-color: var(--color-line);
+  --affine-divider-color: var(--color-line);
+  --affine-background-primary-color: var(--color-canvas);
+  --affine-background-secondary-color: var(--color-surface);
+  --affine-background-modal-color: var(--color-raised);
+  --affine-background-overlay-panel-color: var(--color-raised);
+  --affine-hover-color: var(--color-surface-hover);
+  --affine-v2-button-primary: var(--color-accent-hover);
+  --affine-v2-button-pureWhiteText: var(--color-accent-ink);
+  --affine-v2-button-secondary: var(--color-raised);
+  --affine-v2-button-checkBox: var(--color-accent-hover);
+  --affine-v2-button-iconButtonSolid: var(--color-raised);
+  --affine-v2-button-sidebarButton-background: var(--color-surface);
+  --affine-v2-button-siderbarPrimary-background: var(--color-raised);
+  --affine-v2-text-primary: var(--color-ink);
+  --affine-v2-text-secondary: var(--color-muted);
+  --affine-v2-text-tertiary: var(--color-muted);
+  --affine-v2-text-emphasis: var(--color-accent-hover);
+  --affine-v2-text-link: var(--color-accent-hover);
+  --affine-v2-icon-primary: var(--color-muted);
+  --affine-v2-icon-secondary: var(--color-muted);
+  --affine-v2-icon-activated: var(--color-accent-hover);
+  --affine-v2-layer-background-primary: var(--color-canvas);
+  --affine-v2-layer-background-secondary: var(--color-surface);
+  --affine-v2-layer-background-overlayPanel: var(--color-raised);
+  --affine-v2-layer-background-hoverOverlay: var(--color-surface-hover);
+  --affine-v2-layer-background-mobile-primary: var(--color-canvas);
+  --affine-v2-layer-background-mobile-secondary: var(--color-raised);
+  --affine-v2-layer-insideBorder-border: var(--color-line);
+  --affine-v2-layer-insideBorder-primaryBorder: var(--color-accent-hover);
+  --affine-v2-input-background: var(--color-raised);
+  --affine-v2-input-border-default: var(--color-muted);
+  --affine-v2-input-border-active: var(--color-accent-hover);
+  --affine-v2-dialog-background-primary: var(--color-raised);
+  --affine-v2-centerPeek-background: var(--color-raised);
+  --affine-v2-slashMenu-background: var(--color-raised);
+  --affine-v2-tab-tabBackground-default: var(--color-surface);
+  --affine-v2-tab-tabBackground-active: var(--color-raised);
+  --affine-v2-tab-tabBackground-hover: var(--color-surface-hover);
+  --affine-v2-tab-fontColor-default: var(--color-muted);
+  --affine-v2-tab-fontColor-active: var(--color-ink);
+  --affine-v2-tab-fontColor-hover: var(--color-ink);
+  --affine-v2-selfhost-layer-background-primary: var(--color-canvas);
+  --affine-v2-selfhost-layer-background-secondary: var(--color-surface);
+  --affine-v2-selfhost-layer-background-sidebarBg-sidebarBg: var(--color-surface);
+  --affine-v2-selfhost-text-sidebar-primary: var(--color-ink);
+  --affine-v2-selfhost-text-sidebar-secondary: var(--color-muted);
+  --affine-v2-selfhost-button-primary: var(--color-accent-hover);
+  --affine-v2-selfhost-text-button-primary: var(--color-accent-ink);
+}
+body {
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+[data-testid='local-demo-tips'],
+[data-testid='local-demo-tips'] > div {
+  background: var(--color-error-soft);
+  color: var(--color-error);
+}
+[data-testid='local-demo-tips'] button[data-variant='secondary'] {
+  /* The native inline background reads this variable on the button. */
+  --affine-white: var(--color-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-muted);
+  /* Do not interpolate foreground/background through unreadable theme midpoints. */
+  transition-property: border-color, box-shadow;
+}
+[data-testid='local-demo-tips'] button[data-variant='secondary']:hover:not(:disabled) {
+  --affine-white: var(--color-surface-hover);
+}
+[data-testid='local-demo-tips'] button[data-variant='secondary']:active:not(:disabled) {
+  --affine-white: var(--color-canvas);
+}
+@media (max-width: 767px) {
+  .editor-wrapper.page-mode {
+    max-width: 100vw;
+  }
+  .editor-wrapper.page-mode > div,
+  .editor-wrapper.page-mode > div > div,
+  .editor-wrapper.page-mode
+    :is(
+      .page-editor-container,
+      editor-host,
+      affine-page-root,
+      .affine-page-root-block-container,
+      affine-note,
+      .affine-note-block-container
+    ) {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+  [data-testid='app-sidebar-wrapper'][data-open='true'] {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    box-shadow: var(--shadow-card);
+  }
+}
