@@ -30,7 +30,23 @@ dotnet run --project WarrantySystem  # http://localhost:5103/swagger
 ```
 
 Use each service's **Swagger UI** to inspect its OpenAPI contract and try its
-endpoints.
+endpoints. Select **Authorize** and enter the mock credentials listed below.
+
+## Security
+
+| System | Authentication | Mock credentials (`appsettings.json`) | Rate limit |
+|---|---|---|---|
+| Sales | OAuth2 client credentials, token from `POST /connect/token` | `projectloop` / `sales-mock-secret` | 60/min |
+| Service | OAuth2 client credentials, token from `POST /oauth2/token` | `projectloop` / `service-mock-secret` | 100/min |
+| Warranty | HTTP Basic authentication | `projectloop` / `warranty-mock-password` | 30/min |
+
+- Each token is valid only for the service that issued it, and tokens stop
+  working when that service restarts.
+- CORS allows browser requests only from `localhost`, `127.0.0.1` and `::1` origins.
+- Rate limits apply per client or user, or per IP address before authentication.
+  Requests over the limit receive `429` with a `Retry-After` header.
+- These credentials are for local mocks only. Override them with environment
+  variables, such as `Auth__Clients__0__ClientSecret=...`.
 
 ## Add documents
 

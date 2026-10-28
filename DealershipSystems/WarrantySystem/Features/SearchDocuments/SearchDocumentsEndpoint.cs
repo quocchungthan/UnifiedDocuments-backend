@@ -28,6 +28,7 @@ public static class SearchDocumentsEndpoint
     public static IEndpointRouteBuilder MapSearchDocuments(this IEndpointRouteBuilder routes)
     {
         routes.MapPost("/warranty/v1/claims/documents/search", Handle)
+            .RequireAuthorization()
             .WithName("SearchWarrantyDocuments")
             .WithTags("Warranty documents")
             .Produces<SearchDocumentsResponse>()

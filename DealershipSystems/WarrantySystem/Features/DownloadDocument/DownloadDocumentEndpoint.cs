@@ -13,6 +13,7 @@ public static class DownloadDocumentEndpoint
                     ? Results.NotFound()
                     : Results.File(document.FullPath, document.Entry.MediaType, Path.GetFileName(document.FullPath));
             })
+            .RequireAuthorization()
             .WithName("DownloadWarrantyDocument")
             .WithTags("Warranty documents")
             .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")

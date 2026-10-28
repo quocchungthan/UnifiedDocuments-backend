@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServiceSystem.Application;
 
@@ -19,6 +20,7 @@ public sealed record PageLinks(string Self, string? Next, string? Prev);
 public sealed record ServiceDocumentListResponse(IReadOnlyList<ServiceDocumentDto> Data, PageMeta Meta, PageLinks Links);
 
 [ApiController]
+[Authorize]
 [Route("service-api/v2/documents")]
 [Produces("application/json")]
 public sealed class ServiceDocumentsController(ServiceDocumentQueryService queries) : ControllerBase
