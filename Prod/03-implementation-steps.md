@@ -105,3 +105,13 @@ Google Drive, Seafile, a network share or another document store can plug in as 
 - the provider's authentication, scopes/permissions, rate-limit behavior and retry rules, isolated in its adapter and HTTP handlers.
 
 For Google Drive, I would decide which drives/folders ProjectLoop may index and use the supported Google authentication flow for that deployment; the adapter would keep Drive file IDs and map Drive metadata into `ListedDocument`. For Seafile, I would similarly choose the allowed libraries and map its stable file reference, path/name and timestamps. A local filesystem adapter could enumerate an explicitly configured root and use paths relative to that root as IDs. These are integration directions, not implemented providers. Each new provider should have fake-source sync tests like this one, plus focused adapter tests for its pagination, authentication and error behavior. If a provider cannot report a modification time, the current sync downloads it again and compares the content hash.
+
+### First user story: list documents by VIN
+
+I implemented the first story against the index instead of calling the dealership APIs from the browser. `GET /vehicles/{vin}/documents` validates a full VIN, finds its linked index rows and returns the filename, source system, business reference and modification time. The query stays local to SQLite; it does not fetch document bytes. I allow loopback browser origins so the separate EMFc app can call the local API without exposing dealership credentials.
+
+The search response is marked `Cache-Control: private, max-age=60`. I hash the serialized response into an `ETag` and return `304 Not Modified` when the browser revalidates the same result, so the browser can reuse a recent result without allowing shared caches to retain it.
+
+In EMFc's `app-car-documents` entry, I replaced the unrelated service monitor with a VIN search and a consolidated result table. It has inline VIN validation, loading, error and empty states, shows the source for every result, adapts the table rows for small screens, and credits eldervibe.dev for UI inspiration. I added short entrance and stagger motion inspired by Animate UI's interaction patterns, using CSS so it remains compatible with this Angular app, and disabled those animations for reduced-motion preferences.
+
+To verify the story, I built both projects and searched `1HGCM82633A004352` in the browser. The UI showed 10 documents from Sales, Service and Warranty; an invalid VIN was rejected, a valid VIN with no indexed matches showed the empty state, and the mobile layout had no horizontal overflow.
