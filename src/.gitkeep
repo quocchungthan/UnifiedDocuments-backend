@@ -1,0 +1,3 @@
+# Responsibility: ProjectLoop solution code and integrations, excluding the frontend.
+# Frontend: add a new app interface under src/ in the EMFc-experiments repository.
+# Reuse that repository's existing UI theme and components.
