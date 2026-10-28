@@ -2,7 +2,11 @@ using UnifiedDocuments.Data;
 using UnifiedDocuments.Endpoints;
 using UnifiedDocuments.Sync;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "www",
+});
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -19,6 +23,8 @@ builder.Services.AddUnifiedDocumentsSync(builder.Configuration);
 
 var app = builder.Build();
 app.UseCors();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
