@@ -56,3 +56,38 @@ dotnet ef migrations add InitialCreate --project UnifiedDocuments.Data --startup
 cd UnifiedDocuments
 dotnet ef database update --project ../UnifiedDocuments.Data
 ```
+
+Now that there is somewhere to store the index, I need something to fill it: the background sync. Same approach as the data layer: a separate class library that the entry project registers with one extension method, `AddUnifiedDocumentsSync(configuration)`. The entry project only hosts it.
+```bash
+dotnet new classlib --name UnifiedDocuments.Sync
+dotnet add UnifiedDocuments.Sync reference UnifiedDocuments.Data/UnifiedDocuments.Data.csproj
+dotnet add UnifiedDocuments.Sync package Microsoft.Extensions.Hosting.Abstractions
+dotnet add UnifiedDocuments.Sync package Microsoft.Extensions.Http.Resilience
+dotnet add UnifiedDocuments.Sync package PdfPig
+dotnet add UnifiedDocuments.Sync package MimeKit
+dotnet add UnifiedDocuments reference UnifiedDocuments.Sync/UnifiedDocuments.Sync.csproj
+```
+Why a background service and not a separate console job or a scheduled task? The tool runs locally as one process, so the simplest thing is that the API itself keeps the index fresh: start the app, and it syncs right away and then every `Sync:Interval` (15 minutes by default). If the sync ever needs to run on its own, the library can be hosted by a worker project instead, without changes.
+
+Why does the sync library talk to the `DbContext` directly instead of through a repository interface? Same reasoning as before: it is small, and there is one database implementation. `IDocumentSource` is different. It already has three real implementations, one per dealership system, so that is where the abstraction pays off:
+- `SalesDocumentSource` pages with `page`/`pageSize`, and the business key is the deal number.
+- `ServiceDocumentSource` follows the `links.next` URL, reads snake_case JSON, and the business key is the document kind.
+- `WarrantyDocumentSource` sends a `POST` search and follows the opaque `NextPageToken`. The business key is the claim number.
+
+Why hand-written clients instead of generating them from OpenAPI with Kiota or NSwag, as the design suggested? Each system has only two endpoints that I use, so a generator would add a tool and much more generated code than the connectors themselves. If the APIs grow, I would switch to generated clients.
+
+Authentication is handled by `DelegatingHandler`s, so the connectors never deal with it. Sales and Service use a client-credentials token provider. It caches the token until shortly before it expires, and on a `401` it fetches a fresh token and retries once, because the mocks invalidate tokens when they restart. Warranty uses a Basic authentication handler. On top of that, `AddStandardResilienceHandler` retries temporary failures and waits for `Retry-After` on `429`. I raised its total timeout, because the default 30 seconds is shorter than the one-minute rate-limit window of the mocks.
+
+For each source, the synchronizer:
+1. Lists every document through the connector.
+2. Skips the download if the source's modification time has not changed. Warranty exposes no modification time, so its documents are always downloaded and the content hash decides.
+3. Otherwise downloads the content into memory only, hashes it, and if the hash changed, extracts the text and detects VINs. PDFs go through PdfPig, emails through MimeKit, and everything else is read as text. If parsing fails, the raw bytes are scanned instead, which still finds plain-text VINs.
+4. Removes documents that were not seen in this run, but only after the full listing succeeded, so a failed sync never deletes anything.
+
+A failure in one system is logged and does not stop the others or crash the host. The next run tries again.
+
+The VIN detector matches 17 characters without `I`, `O` and `Q`, with at least one letter and one digit. It does not require a valid check digit, because most non-North-American VINs do not use one.
+
+The source URLs and the mock credentials go into `appsettings.json` under `DealershipSystems`. They are the same mock values the dealership systems publish; for real systems they would come from environment variables or user secrets.
+
+To check it, I start the three dealership systems and then the API. The first run adds all 18 documents. The next run finds them unchanged. Searching for `1HGCM82633A004352` returns 10 documents across all three systems, and the documents without a VIN are kept as unlinked.
