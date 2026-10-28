@@ -74,6 +74,10 @@ Why does the sync library talk to the `DbContext` directly instead of through a 
 - `ServiceDocumentSource` follows the `links.next` URL, reads snake_case JSON, and the business key is the document kind.
 - `WarrantyDocumentSource` sends a `POST` search and follows the opaque `NextPageToken`. The business key is the claim number.
 
+I tested the substitution point with a fake `IDocumentSource` and an in-memory SQLite database. The test syncs a made-up repair order, then checks that its metadata and VIN link were indexed without starting any dealership API. This gives me a cheap way to test sync behavior independently from HTTP, credentials and each vendor's API. The existing source contract is enough for this boundary; I do not need a separate business project just to fake a document client.
+
+Each source now has an `Enabled` setting under `DealershipSystems` in `appsettings.json`. I can set, for example, `DealershipSystems:Sales:Enabled` to `false` to keep that connector out of dependency injection. A disabled source does not need a URL or credentials, which is useful when I run only part of the local setup. Enabled sources validate their required settings at startup. The sync tests check both fake-client substitution and that disabled sources are not registered when credentials are absent.
+
 Why hand-written clients instead of generating them from OpenAPI with Kiota or NSwag, as the design suggested? Each system has only two endpoints that I use, so a generator would add a tool and much more generated code than the connectors themselves. If the APIs grow, I would switch to generated clients.
 
 Authentication is handled by `DelegatingHandler`s, so the connectors never deal with it. Sales and Service use a client-credentials token provider. It caches the token until shortly before it expires, and on a `401` it fetches a fresh token and retries once, because the mocks invalidate tokens when they restart. Warranty uses a Basic authentication handler. On top of that, `AddStandardResilienceHandler` retries temporary failures and waits for `Retry-After` on `429`. I raised its total timeout, because the default 30 seconds is shorter than the one-minute rate-limit window of the mocks.
@@ -91,3 +95,13 @@ The VIN detector matches 17 characters without `I`, `O` and `Q`, with at least o
 The source URLs and the mock credentials go into `appsettings.json` under `DealershipSystems`. They are the same mock values the dealership systems publish; for real systems they would come from environment variables or user secrets.
 
 To check it, I start the three dealership systems and then the API. The first run adds all 18 documents. The next run finds them unchanged. Searching for `1HGCM82633A004352` returns 10 documents across all three systems, and the documents without a VIN are kept as unlinked.
+
+### Adding another document provider later
+
+Google Drive, Seafile, a network share or another document store can plug in as another `IDocumentSource`. I would keep each provider's API, authentication and paging inside its own adapter; `DocumentSynchronizer` should continue to see the same normalized listing and content stream. The provider needs to supply:
+- a stable `SourceName` and opaque document ID (do not use a filename as an ID unless the provider guarantees it is unique and stable);
+- `ListAllAsync` that handles the provider's pagination, returns filename, content type, business key and modification time where available, and honors cancellation;
+- `OpenAsync` that fetches the original content as a stream, without saving a second copy into ProjectLoop;
+- the provider's authentication, scopes/permissions, rate-limit behavior and retry rules, isolated in its adapter and HTTP handlers.
+
+For Google Drive, I would decide which drives/folders ProjectLoop may index and use the supported Google authentication flow for that deployment; the adapter would keep Drive file IDs and map Drive metadata into `ListedDocument`. For Seafile, I would similarly choose the allowed libraries and map its stable file reference, path/name and timestamps. A local filesystem adapter could enumerate an explicitly configured root and use paths relative to that root as IDs. These are integration directions, not implemented providers. Each new provider should have fake-source sync tests like this one, plus focused adapter tests for its pagination, authentication and error behavior. If a provider cannot report a modification time, the current sync downloads it again and compares the content hash.

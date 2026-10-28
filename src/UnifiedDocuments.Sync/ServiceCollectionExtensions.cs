@@ -20,13 +20,26 @@ public static class ServiceCollectionExtensions
         services.AddScoped<DocumentSynchronizer>();
         services.AddHostedService<DocumentSyncWorker>();
 
-        AddOAuthSource<SalesDocumentSource>(services, "Sales", systems.Sales, "connect/token");
-        AddOAuthSource<ServiceDocumentSource>(services, "Service", systems.Service, "oauth2/token");
+        if (systems.Sales.Enabled)
+        {
+            ValidateOAuth("Sales", systems.Sales);
+            AddOAuthSource<SalesDocumentSource>(services, "Sales", systems.Sales, "connect/token");
+        }
 
-        services.AddHttpClient<WarrantyDocumentSource>(http => http.BaseAddress = WithTrailingSlash(systems.Warranty.BaseUrl))
-            .AddHttpMessageHandler(() => new BasicAuthHandler(systems.Warranty.Username, systems.Warranty.Password))
-            .AddStandardResilienceHandler(ConfigureResilience);
-        services.AddTransient<IDocumentSource>(sp => sp.GetRequiredService<WarrantyDocumentSource>());
+        if (systems.Service.Enabled)
+        {
+            ValidateOAuth("Service", systems.Service);
+            AddOAuthSource<ServiceDocumentSource>(services, "Service", systems.Service, "oauth2/token");
+        }
+
+        if (systems.Warranty.Enabled)
+        {
+            ValidateBasic("Warranty", systems.Warranty);
+            services.AddHttpClient<WarrantyDocumentSource>(http => http.BaseAddress = WithTrailingSlash(systems.Warranty.BaseUrl!))
+                .AddHttpMessageHandler(() => new BasicAuthHandler(systems.Warranty.Username!, systems.Warranty.Password!))
+                .AddStandardResilienceHandler(ConfigureResilience);
+            services.AddTransient<IDocumentSource>(sp => sp.GetRequiredService<WarrantyDocumentSource>());
+        }
 
         return services;
     }
@@ -35,18 +48,36 @@ public static class ServiceCollectionExtensions
         where TSource : class, IDocumentSource
     {
         var tokenClientName = $"{name}.Token";
-        services.AddHttpClient(tokenClientName, http => http.BaseAddress = WithTrailingSlash(options.BaseUrl))
+        services.AddHttpClient(tokenClientName, http => http.BaseAddress = WithTrailingSlash(options.BaseUrl!))
             .AddStandardResilienceHandler(ConfigureResilience);
         services.AddKeyedSingleton(name, (sp, _) => new ClientCredentialsTokenProvider(
             sp.GetRequiredService<IHttpClientFactory>().CreateClient(tokenClientName),
             tokenPath,
-            options.ClientId,
-            options.ClientSecret));
+            options.ClientId!,
+            options.ClientSecret!));
 
-        services.AddHttpClient<TSource>(http => http.BaseAddress = WithTrailingSlash(options.BaseUrl))
+        services.AddHttpClient<TSource>(http => http.BaseAddress = WithTrailingSlash(options.BaseUrl!))
             .AddHttpMessageHandler(sp => new BearerTokenHandler(sp.GetRequiredKeyedService<ClientCredentialsTokenProvider>(name)))
             .AddStandardResilienceHandler(ConfigureResilience);
         services.AddTransient<IDocumentSource>(sp => sp.GetRequiredService<TSource>());
+    }
+
+    private static void ValidateOAuth(string name, OAuthSourceOptions options)
+    {
+        if (options.BaseUrl is null || !options.BaseUrl.IsAbsoluteUri ||
+            string.IsNullOrWhiteSpace(options.ClientId) || string.IsNullOrWhiteSpace(options.ClientSecret))
+        {
+            throw new InvalidOperationException($"Enabled source '{name}' requires BaseUrl, ClientId and ClientSecret.");
+        }
+    }
+
+    private static void ValidateBasic(string name, BasicSourceOptions options)
+    {
+        if (options.BaseUrl is null || !options.BaseUrl.IsAbsoluteUri ||
+            string.IsNullOrWhiteSpace(options.Username) || string.IsNullOrWhiteSpace(options.Password))
+        {
+            throw new InvalidOperationException($"Enabled source '{name}' requires BaseUrl, Username and Password.");
+        }
     }
 
     // Sources rate-limit with Retry-After up to a minute; the default 30 s total timeout would give up first.

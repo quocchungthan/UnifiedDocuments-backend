@@ -7,21 +7,23 @@ public sealed class SyncOptions
 
 public sealed class OAuthSourceOptions
 {
-    public required Uri BaseUrl { get; set; }
-    public required string ClientId { get; set; }
-    public required string ClientSecret { get; set; }
+    public bool Enabled { get; set; } = true;
+    public Uri? BaseUrl { get; set; }
+    public string? ClientId { get; set; }
+    public string? ClientSecret { get; set; }
 }
 
 public sealed class BasicSourceOptions
 {
-    public required Uri BaseUrl { get; set; }
-    public required string Username { get; set; }
-    public required string Password { get; set; }
+    public bool Enabled { get; set; } = true;
+    public Uri? BaseUrl { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
 }
 
 public sealed class DealershipSystemsOptions
 {
-    public required OAuthSourceOptions Sales { get; set; }
-    public required OAuthSourceOptions Service { get; set; }
-    public required BasicSourceOptions Warranty { get; set; }
+    public OAuthSourceOptions Sales { get; set; } = new();
+    public OAuthSourceOptions Service { get; set; } = new();
+    public BasicSourceOptions Warranty { get; set; } = new();
 }
