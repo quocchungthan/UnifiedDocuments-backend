@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120" viewBox="0 0 320 120">
+  <rect width="320" height="120" fill="#f4f4f4"/>
+  <text x="16" y="36" font-family="Arial" font-size="16">Multi-point inspection</text>
+  <text x="16" y="64" font-family="Arial" font-size="12">VIN 1HGCM82633A004352 - 2025-06-20</text>
+  <circle cx="24" cy="92" r="8" fill="#2e7d32"/><text x="40" y="96" font-family="Arial" font-size="12">Tyres OK</text>
+  <circle cx="124" cy="92" r="8" fill="#f9a825"/><text x="140" y="96" font-family="Arial" font-size="12">Wipers: replace soon</text>
+</svg>

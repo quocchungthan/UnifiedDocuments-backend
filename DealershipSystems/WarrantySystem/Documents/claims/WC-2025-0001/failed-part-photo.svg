@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="140" viewBox="0 0 240 140">
+  <rect width="240" height="140" fill="#eceff1"/>
+  <circle cx="120" cy="62" r="40" fill="#90a4ae" stroke="#37474f" stroke-width="4"/>
+  <path d="M100 50 L140 76" stroke="#c62828" stroke-width="4"/>
+  <text x="12" y="128" font-family="Arial" font-size="12">AC compressor clutch - cracked</text>
+</svg>

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "WD-0001",
+    "claimNumber": "WC-2025-0001",
+    "title": "Warranty claim form",
+    "documentType": "claim-form",
+    "issuedOn": "2025-02-10",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2025-0001/claim-form.pdf"
+  },
+  {
+    "id": "WD-0002",
+    "claimNumber": "WC-2025-0001",
+    "title": "Failed part photo",
+    "documentType": "evidence",
+    "issuedOn": "2025-02-10",
+    "mediaType": "image/svg+xml",
+    "path": "claims/WC-2025-0001/failed-part-photo.svg"
+  },
+  {
+    "id": "WD-0003",
+    "claimNumber": "WC-2025-0001",
+    "title": "Adjuster decision notes",
+    "documentType": "decision",
+    "issuedOn": "2025-02-18",
+    "mediaType": "text/markdown",
+    "path": "claims/WC-2025-0001/adjuster-notes.md"
+  },
+  {
+    "id": "WD-0004",
+    "claimNumber": "EXT-POLICY-7781",
+    "title": "Extended warranty certificate",
+    "documentType": "policy",
+    "issuedOn": "2024-03-02",
+    "mediaType": "application/json",
+    "path": "policies/extended-warranty-7781.json"
+  },
+  {
+    "id": "WD-0005",
+    "claimNumber": "WC-2025-0042",
+    "title": "Goodwill repair approval",
+    "documentType": "decision",
+    "issuedOn": "2025-07-01",
+    "mediaType": "text/plain",
+    "path": "claims/WC-2025-0042/goodwill-approval.txt"
+  }
+]

@@ -1,5 +1,7 @@
 # Unified Document Viewer
 
+The three external services are mocked in `DealershipSystems/`. With the .NET 10. See [DealershipSystems/README.md](DealershipSystems/README.md#run) for details.
+
 ## Goal
 
 Vehicle-related documents are currently distributed across three services within

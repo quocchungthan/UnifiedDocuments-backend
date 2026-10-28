@@ -1,0 +1,1 @@
+Draft upload never registered in manifest.json, so the Warranty API does not expose it.

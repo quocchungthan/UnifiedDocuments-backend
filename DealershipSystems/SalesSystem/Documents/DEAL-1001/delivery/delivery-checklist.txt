@@ -1,0 +1,8 @@
+DELIVERY CHECKLIST
+VIN: 1HGCM82633A004352
+Delivered: 2024-03-05
+
+[x] Owner manual handed over
+[x] Two keys handed over
+[x] Fuel level full
+[x] Customer signature captured
