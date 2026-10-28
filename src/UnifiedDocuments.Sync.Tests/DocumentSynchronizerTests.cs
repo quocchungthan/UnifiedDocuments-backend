@@ -29,7 +29,13 @@ public sealed class DocumentSynchronizerTests
             "Repair order for VIN 1HGCM82633A004352");
         var synchronizer = new DocumentSynchronizer(
             db,
-            new TextExtractor(NullLogger<TextExtractor>.Instance),
+            new TextExtractor(
+            [
+                new PdfTextExtractionStrategy(),
+                new EmailTextExtractionStrategy(),
+                new TextDocumentExtractionStrategy(),
+            ],
+            NullLogger<TextExtractor>.Instance),
             TimeProvider.System,
             NullLogger<DocumentSynchronizer>.Instance);
 
@@ -61,6 +67,7 @@ public sealed class DocumentSynchronizerTests
 
         using var provider = services.BuildServiceProvider();
         Assert.Empty(provider.GetServices<IDocumentSource>());
+        Assert.NotNull(provider.GetRequiredService<TextExtractor>());
     }
 
     [Fact]

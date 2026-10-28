@@ -11,6 +11,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .SetIsOriginAllowed(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback)
     .AllowAnyHeader()
     .AllowAnyMethod()));
+builder.Services.AddMemoryCache(options => options.SizeLimit = 64 * 1024 * 1024);
 builder.Services.AddUnifiedDocumentsData(
     builder.Configuration.GetConnectionString("UnifiedDocuments")
     ?? throw new InvalidOperationException("Connection string 'UnifiedDocuments' is not configured."));

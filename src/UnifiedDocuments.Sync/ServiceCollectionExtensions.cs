@@ -16,6 +16,9 @@ public static class ServiceCollectionExtensions
             ?? throw new InvalidOperationException("Section 'DealershipSystems' is not configured.");
 
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ITextExtractionStrategy, PdfTextExtractionStrategy>();
+        services.AddSingleton<ITextExtractionStrategy, EmailTextExtractionStrategy>();
+        services.AddSingleton<ITextExtractionStrategy, TextDocumentExtractionStrategy>();
         services.AddSingleton<TextExtractor>();
         services.AddScoped<DocumentSynchronizer>();
         services.AddHostedService<DocumentSyncWorker>();
