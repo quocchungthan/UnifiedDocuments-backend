@@ -61,3 +61,9 @@ Those different lifetimes follow their state and resource ownership rather
 than applying one lifetime to every service.
 
 > In short keep the implementation: Encapsulated, Functional, Managable and contract-firsts is the princple when I work with AI for easier to control the outcome, I call it EMFc for short.
+
+The same Boy Scout Rule applies to the frontend. The Vehicle Documents logo
+and brand are one home link to `/`. Clicking either returns to a fresh search
+page and removes the VIN query and any other URL parameters. A normal link
+already provides keyboard navigation and browser history, so this does not
+need another click handler or state-reset mechanism. And tiny further enhancements are coming.
