@@ -2,11 +2,8 @@ name: projectloop
 
 services:
   sales:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PROJECT_FILE: DealershipSystems/SalesSystem/SalesSystem.csproj
+    image: ghcr.io/quocchungthan/unifieddocuments-backend-sales:${IMAGE_TAG:-latest}
+    pull_policy: always
     command: ["SalesSystem.dll"]
     restart: unless-stopped
     environment:
@@ -30,11 +27,8 @@ services:
           create_host_path: false
 
   service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PROJECT_FILE: DealershipSystems/ServiceSystem/ServiceSystem.csproj
+    image: ghcr.io/quocchungthan/unifieddocuments-backend-service:${IMAGE_TAG:-latest}
+    pull_policy: always
     command: ["ServiceSystem.dll"]
     restart: unless-stopped
     environment:
@@ -58,11 +52,8 @@ services:
           create_host_path: false
 
   warranty:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PROJECT_FILE: DealershipSystems/WarrantySystem/WarrantySystem.csproj
+    image: ghcr.io/quocchungthan/unifieddocuments-backend-warranty:${IMAGE_TAG:-latest}
+    pull_policy: always
     command: ["WarrantySystem.dll"]
     restart: unless-stopped
     environment:
@@ -86,12 +77,8 @@ services:
           create_host_path: false
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PROJECT_FILE: src/UnifiedDocuments/UnifiedDocuments.csproj
-        INCLUDE_FRONTEND: "true"
+    image: ghcr.io/quocchungthan/unifieddocuments-backend:${IMAGE_TAG:-latest}
+    pull_policy: always
     command: ["UnifiedDocuments.dll"]
     hostname: ${UNIFIED_DOCUMENTS_HOST:-unified.documents.local}
     restart: unless-stopped

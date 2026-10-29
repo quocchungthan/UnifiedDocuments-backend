@@ -7,9 +7,17 @@ start the application.
 
 ## Run the complete stack
 
-The Compose setup builds the three dealership mock APIs and backend, embeds the
-frontend bundle in `frontend-bundle/`. 
-edit `.env` follows `.env.exampl` then run `docker compose up --build -d`.
+GitHub Actions builds and publishes the four images to GHCR on pushes to `main`.
+The backend image includes the newest successful `vehicle-documents-ui`
+artifact from `feat/ProjectLoop-frontend`. Configure the `GH_PAT` repository
+Actions secret with permission to read that repository's workflow artifacts;
+the token is used only by the workflow and is not included in an image.
+
+Set `.env` from `.env.example`, then run `docker compose pull` followed by
+`docker compose up -d`. Compose only pulls published images. To use an immutable
+pipeline build, set `IMAGE_TAG` to its `sha-<commit>` tag in `.env`.
+If the GHCR packages are private, authenticate Docker to `ghcr.io` with a token
+that has `read:packages` before pulling.
 
 ## Goal
 
