@@ -5,6 +5,25 @@ The three external services are mocked in `DealershipSystems/`. With the .NET 10
 Then follow [Download the UI and run](./RUN%20with%20UI.md) to install the UI bundle and
 start the application.
 
+## Development
+
+Requires the .NET 10 SDK. From the repository root:
+
+```bash
+dotnet build src/UnifiedDocuments/UnifiedDocuments.csproj
+dotnet test src/UnifiedDocuments.Sync.Tests/UnifiedDocuments.Sync.Tests.csproj
+```
+
+See the [system design](Prod/02-system-design.md) and the
+[dealership mock run instructions](DealershipSystems/README.md#run).
+
+## AI Collaboration Narrative
+
+GenAI assisted with design exploration and implementation. Its suggestions were
+checked against the supplied requirements and mock API contracts, then refined
+and verified with builds and tests; final decisions and quality remain the
+author's responsibility.
+
 ## Run the complete stack
 
 GitHub Actions builds and publishes the four images to GHCR on pushes to `main`.
