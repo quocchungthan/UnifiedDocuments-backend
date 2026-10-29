@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using UnifiedDocuments.Data;
 using UnifiedDocuments.Data.Entities;
 using UnifiedDocuments.Sync.Extraction;
@@ -14,10 +15,12 @@ public sealed class DocumentSynchronizer(
     UnifiedDocumentsDbContext db,
     TextExtractor extractor,
     TimeProvider time,
+    IOptions<SyncOptions> options,
     ILogger<DocumentSynchronizer> logger)
 {
     public async Task<SyncResult> SyncAsync(IDocumentSource source, CancellationToken cancellationToken)
     {
+        var startedAt = time.GetTimestamp();
         var runStartedAt = time.GetUtcNow();
         var known = await db.SourceDocuments
             .Include(d => d.Vins)
@@ -37,7 +40,11 @@ public sealed class DocumentSynchronizer(
             }
 
             // Content lives in memory only for this step; it is never persisted.
-            var content = await ReadAllAsync(source, listed.SourceDocumentId, cancellationToken);
+            var content = await ReadAllAsync(
+                source,
+                listed.SourceDocumentId,
+                options.Value.DocumentReadTimeout,
+                cancellationToken);
             var hash = Convert.ToHexStringLower(SHA256.HashData(content));
 
             if (document is null)
@@ -78,8 +85,10 @@ public sealed class DocumentSynchronizer(
         await db.SaveChangesAsync(cancellationToken);
 
         var result = new SyncResult(source.SourceName, added, updated, unchanged, removed.Count);
-        logger.LogInformation("Synced {Source}: {Added} added, {Updated} updated, {Unchanged} unchanged, {Removed} removed.",
-            result.SourceName, result.Added, result.Updated, result.Unchanged, result.Removed);
+        logger.LogInformation(
+            "Synced {Source}: {Added} added, {Updated} updated, {Unchanged} unchanged, {Removed} removed in {DurationMs} ms.",
+            result.SourceName, result.Added, result.Updated, result.Unchanged, result.Removed,
+            time.GetElapsedTime(startedAt).TotalMilliseconds);
         return result;
     }
 
@@ -104,11 +113,28 @@ public sealed class DocumentSynchronizer(
             document.Vins.Add(new DocumentVin { Vin = vin });
     }
 
-    private static async Task<byte[]> ReadAllAsync(IDocumentSource source, string id, CancellationToken cancellationToken)
+    private static async Task<byte[]> ReadAllAsync(
+        IDocumentSource source,
+        string id,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
     {
+        if (timeout <= TimeSpan.Zero)
+            throw new InvalidOperationException("Sync:DocumentReadTimeout must be greater than zero.");
+
         await using var stream = await source.OpenAsync(id, cancellationToken);
+        using var readTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        readTimeout.CancelAfter(timeout);
         using var buffer = new MemoryStream();
-        await stream.CopyToAsync(buffer, cancellationToken);
-        return buffer.ToArray();
+        try
+        {
+            await stream.CopyToAsync(buffer, readTimeout.Token);
+            return buffer.ToArray();
+        }
+        catch (OperationCanceledException exception)
+            when (!cancellationToken.IsCancellationRequested && readTimeout.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Reading document '{id}' exceeded the configured timeout of {timeout}.", exception);
+        }
     }
 }

@@ -21,6 +21,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run backend tests
+        run: dotnet test src/UnifiedDocuments.Sync.Tests/UnifiedDocuments.Sync.Tests.csproj --configuration Release
+
       - name: Download latest frontend artifact
         id: frontend
         uses: actions/github-script@v7

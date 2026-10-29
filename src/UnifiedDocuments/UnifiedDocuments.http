@@ -1,6 +1,30 @@
 @UnifiedDocuments_HostAddress = http://localhost:5268
+@vin = 1HGCM82633A004352
 
-GET {{UnifiedDocuments_HostAddress}}/weatherforecast/
+### Search documents for a VIN
+GET {{UnifiedDocuments_HostAddress}}/vehicles/{{vin}}/documents
 Accept: application/json
 
 ###
+
+### Suggest VINs matching a prefix or fragment
+GET {{UnifiedDocuments_HostAddress}}/vehicles/identifiers?query=1HGCM
+Accept: application/json
+
+###
+
+### First page of documents without a detected VIN
+GET {{UnifiedDocuments_HostAddress}}/documents/unlinked?pageSize=50
+Accept: application/json
+
+###
+
+### Next page: replace the cursor value with nextCursor from the previous response
+@unlinkedCursor = replace-with-nextCursor
+GET {{UnifiedDocuments_HostAddress}}/documents/unlinked?pageSize=50&cursor={{unlinkedCursor}}
+Accept: application/json
+
+###
+
+### Download an original document (replace the source and ID with a search result)
+GET {{UnifiedDocuments_HostAddress}}/documents/Sales/example-document-id/content?download=true

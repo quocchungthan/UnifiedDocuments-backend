@@ -1,11 +1,14 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Polly.Timeout;
 using UnifiedDocuments.Data;
 using UnifiedDocuments.Data.Entities;
 using UnifiedDocuments.Sync.Sources;
@@ -143,8 +146,10 @@ public static class VehicleDocumentsEndpoints
         IMemoryCache cache,
         HttpContext httpContext,
         CancellationToken cancellationToken,
+        ILoggerFactory loggerFactory,
         bool download = false)
     {
+        var logger = loggerFactory.CreateLogger(nameof(VehicleDocumentsEndpoints));
         var document = await db.SourceDocuments
             .AsNoTracking()
             .SingleOrDefaultAsync(
@@ -161,20 +166,38 @@ public static class VehicleDocumentsEndpoints
         var contentType = MediaTypeHeaderValue.TryParse(document.ContentType, out var parsedContentType)
             ? parsedContentType.ToString()
             : "application/octet-stream";
-        var entityTag = $"\"{document.ContentHash}\"";
         httpContext.Response.Headers.CacheControl = $"private, max-age={(int)TimeSpan.FromMinutes(ContentCacheMinutes).TotalSeconds}";
-        httpContext.Response.Headers.ETag = entityTag;
         httpContext.Response.Headers.XContentTypeOptions = "nosniff";
         httpContext.Response.Headers.ContentDisposition = GetContentDisposition(document, contentType, download);
 
-        if (MatchesIfNoneMatch(httpContext, entityTag))
-            return Results.StatusCode(StatusCodes.Status304NotModified);
-
         var cacheKey = $"document-content:{document.SourceName}:{document.SourceDocumentId}:{document.ContentHash}";
-        if (cache.TryGetValue(cacheKey, out byte[]? cachedContent) && cachedContent is not null)
-            return Results.Bytes(cachedContent, contentType);
+        if (cache.TryGetValue(cacheKey, out CachedDocumentContent? cachedContent) && cachedContent is not null)
+        {
+            var cachedTag = $"\"{cachedContent.ContentHash}\"";
+            httpContext.Response.Headers.ETag = cachedTag;
+            if (MatchesIfNoneMatch(httpContext, cachedTag))
+                return Results.StatusCode(StatusCodes.Status304NotModified);
+            return Results.Bytes(cachedContent.Content, contentType);
+        }
 
-        var contentStream = await documentSource.OpenAsync(document.SourceDocumentId, cancellationToken);
+        Stream contentStream;
+        try
+        {
+            contentStream = await documentSource.OpenAsync(document.SourceDocumentId, cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            return MapUpstreamFailure(exception, document.SourceName, logger);
+        }
+        catch (TimeoutRejectedException exception)
+        {
+            return MapUpstreamTimeout(exception, document.SourceName, logger);
+        }
+        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            return MapUpstreamTimeout(exception, document.SourceName, logger);
+        }
+
         var buffer = new MemoryStream();
         var chunk = new byte[81920];
 
@@ -186,9 +209,19 @@ public static class VehicleDocumentsEndpoints
                 if (bytesRead == 0)
                 {
                     var content = buffer.ToArray();
+                    var contentHash = Convert.ToHexStringLower(SHA256.HashData(content));
+                    var entityTag = $"\"{contentHash}\"";
+                    httpContext.Response.Headers.ETag = entityTag;
+                    if (MatchesIfNoneMatch(httpContext, entityTag))
+                    {
+                        await contentStream.DisposeAsync();
+                        buffer.Dispose();
+                        return Results.StatusCode(StatusCodes.Status304NotModified);
+                    }
+
                     cache.Set(
                         cacheKey,
-                        content,
+                        new CachedDocumentContent(content, contentHash),
                         new MemoryCacheEntryOptions()
                             .SetSize(content.Length)
                             .SetAbsoluteExpiration(TimeSpan.FromMinutes(ContentCacheMinutes)));
@@ -201,6 +234,7 @@ public static class VehicleDocumentsEndpoints
                 if (buffer.Length <= CacheableDocumentLimit)
                     continue;
 
+                httpContext.Response.Headers.Remove("ETag");
                 return Results.Stream(async output =>
                 {
                     try
@@ -217,12 +251,66 @@ public static class VehicleDocumentsEndpoints
                 }, contentType);
             }
         }
+        catch (HttpRequestException exception)
+        {
+            await contentStream.DisposeAsync();
+            buffer.Dispose();
+            return MapUpstreamFailure(exception, document.SourceName, logger);
+        }
+        catch (TimeoutRejectedException exception)
+        {
+            await contentStream.DisposeAsync();
+            buffer.Dispose();
+            return MapUpstreamTimeout(exception, document.SourceName, logger);
+        }
+        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            await contentStream.DisposeAsync();
+            buffer.Dispose();
+            return MapUpstreamTimeout(exception, document.SourceName, logger);
+        }
         catch
         {
             await contentStream.DisposeAsync();
             buffer.Dispose();
             throw;
         }
+    }
+
+    private sealed record CachedDocumentContent(byte[] Content, string ContentHash);
+
+    private static IResult MapUpstreamFailure(
+        HttpRequestException exception,
+        string sourceName,
+        ILogger logger)
+    {
+        if (exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            logger.LogInformation(exception, "Document content is missing from source {Source}.", sourceName);
+            return Results.NotFound();
+        }
+
+        var statusCode = exception.StatusCode switch
+        {
+            HttpStatusCode.TooManyRequests => StatusCodes.Status503ServiceUnavailable,
+            >= HttpStatusCode.InternalServerError => StatusCodes.Status503ServiceUnavailable,
+            null => StatusCodes.Status503ServiceUnavailable,
+            _ => StatusCodes.Status502BadGateway,
+        };
+        logger.LogWarning(exception, "Document source {Source} failed while retrieving content.", sourceName);
+        return Results.Problem(
+            statusCode: statusCode,
+            title: statusCode == StatusCodes.Status503ServiceUnavailable
+                ? "The document source is temporarily unavailable."
+                : "The document source rejected the request.");
+    }
+
+    private static IResult MapUpstreamTimeout(Exception exception, string sourceName, ILogger logger)
+    {
+        logger.LogWarning(exception, "Timed out while retrieving content from source {Source}.", sourceName);
+        return Results.Problem(
+            statusCode: StatusCodes.Status504GatewayTimeout,
+            title: "The document source did not respond in time.");
     }
 
     private static bool MatchesIfNoneMatch(HttpContext httpContext, string entityTag)

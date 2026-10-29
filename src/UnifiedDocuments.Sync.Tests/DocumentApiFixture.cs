@@ -85,6 +85,7 @@ internal sealed class DocumentApiFixture : IAsyncDisposable
         public string SourceName => "Warranty";
         public Dictionary<string, byte[]> Documents { get; } = [];
         public int OpenCount { get; private set; }
+        public Exception? OpenException { get; set; }
 
         public async IAsyncEnumerable<ListedDocument> ListAllAsync(
             [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -97,6 +98,8 @@ internal sealed class DocumentApiFixture : IAsyncDisposable
         public Task<Stream> OpenAsync(string sourceDocumentId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (OpenException is not null)
+                throw OpenException;
             var content = Documents[sourceDocumentId];
             OpenCount++;
             return Task.FromResult<Stream>(new MemoryStream(content, writable: false));

@@ -29,30 +29,80 @@ public sealed class DocumentContentEndpointTests
     }
 
     [Theory]
-    [InlineData("\"hash\"", false)]
-    [InlineData("W/\"hash\"", false)]
-    [InlineData("*", false)]
-    [InlineData("\"different\"", true)]
-    public async Task GetContent_revalidates_before_opening_source(string tag, bool shouldFetch)
+    [InlineData("matching", false)]
+    [InlineData("weak", false)]
+    [InlineData("wildcard", false)]
+    [InlineData("different", true)]
+    public async Task GetContent_revalidates_cached_bytes(string tagKind, bool shouldFetch)
     {
         var content = Encoding.UTF8.GetBytes("original bytes");
         var document = DocumentApiFixture.Document("claim", content);
-        document.ContentHash = "hash";
         await using var api = await DocumentApiFixture.CreateAsync(document);
         api.Source.Documents.Add("claim", content);
+        using var initial = await api.Client.GetAsync("/documents/Warranty/claim/content");
         using var request = new HttpRequestMessage(HttpMethod.Get, "/documents/Warranty/claim/content");
+        var tag = tagKind switch
+        {
+            "matching" => $"\"{document.ContentHash}\"",
+            "weak" => $"W/\"{document.ContentHash}\"",
+            "wildcard" => "*",
+            _ => "\"different\"",
+        };
         request.Headers.IfNoneMatch.Add(tag == "*" ? EntityTagHeaderValue.Any : EntityTagHeaderValue.Parse(tag));
 
         using var response = await api.Client.SendAsync(request);
 
         Assert.Equal(shouldFetch ? HttpStatusCode.OK : HttpStatusCode.NotModified, response.StatusCode);
-        Assert.Equal(shouldFetch ? 1 : 0, api.Source.OpenCount);
+        Assert.Equal(1, api.Source.OpenCount);
+    }
+
+    [Fact]
+    public async Task GetContent_uses_the_downloaded_bytes_hash_when_the_index_is_stale()
+    {
+        var indexedContent = Encoding.UTF8.GetBytes("indexed bytes");
+        var currentContent = Encoding.UTF8.GetBytes("current upstream bytes");
+        var document = DocumentApiFixture.Document("claim", indexedContent);
+        await using var api = await DocumentApiFixture.CreateAsync(document);
+        api.Source.Documents.Add("claim", currentContent);
+
+        using var first = await api.Client.GetAsync("/documents/Warranty/claim/content");
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(currentContent, await first.Content.ReadAsByteArrayAsync());
+        var actualTag = $"\"{Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(currentContent))}\"";
+        Assert.Equal(actualTag, first.Headers.ETag?.Tag);
+
+        using var staleRequest = new HttpRequestMessage(HttpMethod.Get, "/documents/Warranty/claim/content");
+        staleRequest.Headers.IfNoneMatch.Add(EntityTagHeaderValue.Parse($"\"{document.ContentHash}\""));
+        using var staleResponse = await api.Client.SendAsync(staleRequest);
+        Assert.Equal(HttpStatusCode.OK, staleResponse.StatusCode);
+        Assert.Equal(currentContent, await staleResponse.Content.ReadAsByteArrayAsync());
+
+        using var currentRequest = new HttpRequestMessage(HttpMethod.Get, "/documents/Warranty/claim/content");
+        currentRequest.Headers.IfNoneMatch.Add(EntityTagHeaderValue.Parse(actualTag));
+        using var currentResponse = await api.Client.SendAsync(currentRequest);
+        Assert.Equal(HttpStatusCode.NotModified, currentResponse.StatusCode);
+        Assert.Equal(1, api.Source.OpenCount);
     }
 
     [Theory]
-    [InlineData(10 * 1024 * 1024, 1)]
-    [InlineData(10 * 1024 * 1024 + 1, 2)]
-    public async Task GetContent_caches_only_documents_at_or_below_the_size_limit(int size, int expectedFetches)
+    [InlineData(HttpStatusCode.NotFound, HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, HttpStatusCode.ServiceUnavailable)]
+    public async Task GetContent_maps_upstream_http_failures(HttpStatusCode upstreamStatus, HttpStatusCode expectedStatus)
+    {
+        var document = DocumentApiFixture.Document("claim", []);
+        await using var api = await DocumentApiFixture.CreateAsync(document);
+        api.Source.OpenException = new HttpRequestException("upstream failure", null, upstreamStatus);
+
+        using var response = await api.Client.GetAsync("/documents/Warranty/claim/content");
+
+        Assert.Equal(expectedStatus, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(10 * 1024 * 1024, 1, true)]
+    [InlineData(10 * 1024 * 1024 + 1, 2, false)]
+    public async Task GetContent_caches_only_documents_at_or_below_the_size_limit(int size, int expectedFetches, bool hasEtag)
     {
         var content = new byte[size];
         Array.Fill(content, (byte)'x');
@@ -64,6 +114,8 @@ public sealed class DocumentContentEndpointTests
 
         Assert.Equal(content, await first.Content.ReadAsByteArrayAsync());
         Assert.Equal(content, await second.Content.ReadAsByteArrayAsync());
+        Assert.Equal(hasEtag, first.Headers.ETag is not null);
+        Assert.Equal(hasEtag, second.Headers.ETag is not null);
         Assert.Equal(expectedFetches, api.Source.OpenCount);
     }
 
