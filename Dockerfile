@@ -10,8 +10,6 @@ RUN if [ "$INCLUDE_FRONTEND" = "true" ]; then mkdir -p /app/publish/www && cp -a
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
-    && groupadd --system app \
-    && useradd --system --gid app --home-dir /app app \
     && mkdir -p /data \
     && chown app:app /data \
     && rm -rf /var/lib/apt/lists/*
