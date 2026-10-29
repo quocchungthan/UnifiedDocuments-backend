@@ -16,8 +16,17 @@ the token is used only by the workflow and is not included in an image.
 Set `.env` from `.env.example`, then run `docker compose pull` followed by
 `docker compose up -d`. Compose only pulls published images. To use an immutable
 pipeline build, set `IMAGE_TAG` to its `sha-<commit>` tag in `.env`.
+
 If the GHCR packages are private, authenticate Docker to `ghcr.io` with a token
 that has `read:packages` before pulling.
+
+In my machines I always have the variable environment named GH_PAT so I would do it like this:
+```bash
+cd UnifiedDocuments-backend/
+echo $GH_PAT | docker login ghcr.io -u quocchungthan --password-stdin
+docker compose pull
+docker compose up -d
+```
 
 ## Goal
 
