@@ -148,6 +148,43 @@ public sealed class DocumentListEndpointTests
         Assert.Equal(0, api.Source.OpenCount);
     }
 
+    [Fact]
+    public async Task GetVehicleIdentifiers_returns_distinct_best_matches_first()
+    {
+        await using var api = await DocumentApiFixture.CreateAsync(
+            DocumentApiFixture.Document("prefix-z", [], vin: "1HGCM82633A004352"),
+            DocumentApiFixture.Document("contains", [], vin: "21HGCM82633A00435"),
+            DocumentApiFixture.Document("prefix-a", [], vin: "1HGCM82633A004351"),
+            DocumentApiFixture.Document("duplicate", [], vin: "1HGCM82633A004351"),
+            DocumentApiFixture.Document("unlinked", []));
+
+        var identifiers = await api.Client.GetFromJsonAsync<string[]>("/vehicles/identifiers?query=1hg");
+
+        Assert.Equal(
+            ["1HGCM82633A004351", "1HGCM82633A004352", "21HGCM82633A00435"],
+            identifiers);
+        Assert.Equal(0, api.Source.OpenCount);
+    }
+
+    [Fact]
+    public async Task GetVehicleIdentifiers_returns_at_most_ten_distinct_values_for_empty_query()
+    {
+        var documents = Enumerable.Range(0, 12)
+            .Select(index => DocumentApiFixture.Document(
+                $"vin-{index}", [], vin: $"1HGCM82633A0043{index:D2}"))
+            .Append(DocumentApiFixture.Document("duplicate", [], vin: "1HGCM82633A004300"))
+            .ToArray();
+        await using var api = await DocumentApiFixture.CreateAsync(documents);
+
+        var identifiers = await api.Client.GetFromJsonAsync<string[]>("/vehicles/identifiers?query=");
+
+        Assert.Equal(10, identifiers?.Length);
+        Assert.Equal(identifiers?.Length, identifiers?.Distinct().Count());
+        Assert.Equal(
+            Enumerable.Range(0, 10).Select(index => $"1HGCM82633A0043{index:D2}"),
+            identifiers);
+    }
+
     [Theory]
     [InlineData("short")]
     [InlineData("IIIIIIIIIIIIIIIII")]

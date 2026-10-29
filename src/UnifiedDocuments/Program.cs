@@ -40,5 +40,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapVehicleDocumentsEndpoints();
+app.MapVehicleIdentifierNumbersEndpoints();
 
 app.Run();

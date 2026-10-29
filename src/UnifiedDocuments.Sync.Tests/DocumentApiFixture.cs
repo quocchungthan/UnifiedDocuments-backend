@@ -42,6 +42,7 @@ internal sealed class DocumentApiFixture : IAsyncDisposable
 
         var app = builder.Build();
         app.MapVehicleDocumentsEndpoints();
+        app.MapVehicleIdentifierNumbersEndpoints();
         await using (var scope = app.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<UnifiedDocumentsDbContext>();

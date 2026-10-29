@@ -157,3 +157,5 @@ healthy before starting the backend, and stores the SQLite index in a named
 volume. The backend applies its EF migrations at startup. Host ports, the local
 hostname and mock credentials are supplied through `.env`; add the hostname to
 the Windows hosts file to browse the app as `unified.documents.local`.
+
+Let's say for usability and testability, we need to introduce a lazyload list of index VIN in the searchbox when user start typing there, we order them by best match first. Let's called the Endpoints extension VehicleIdentifierNumbersEndpoints, we also need to adapt the frontend in EMFc angular UI to loading when user focus at the box, also, adopt the abortion when user continue typing while requests on flight.
