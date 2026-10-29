@@ -36,8 +36,11 @@ Set `.env` from `.env.example`, then run `docker compose pull` followed by
 `docker compose up -d`. Compose only pulls published images. To use an immutable
 pipeline build, set `IMAGE_TAG` to its `sha-<commit>` tag in `.env`.
 
-If the GHCR packages are private, authenticate Docker to `ghcr.io` with a token
-that has `read:packages` before pulling.
+For public pulls without Docker login, open [your packages](https://github.com/quocchungthan?tab=packages)
+and set **Package settings > Change visibility > Public** for `unifieddocuments-backend`
+and its `-sales`, `-service`, and `-warranty` packages. This is a one-time GitHub
+setting, not a workflow option; future pipeline builds retain public visibility.
+Until then, private pulls require a token with `read:packages`.
 
 In my machines I always have the variable environment named GH_PAT so I would do it like this:
 ```bash
