@@ -145,3 +145,15 @@ The paging tests walk a set larger than two default pages, including equal
 dates, and verify bounded responses, no missing or duplicate rows, cursor
 validation and termination. Frontend cases check append, end-of-list,
 duplicate-request protection and preserving rows when a page must be retried.
+
+
+### Containerized local setup
+
+The root `compose.yaml` builds each dealership mock and the backend from the
+shared .NET 10 `Dockerfile`. The frontend workflow artifact from run 40723162028
+is pinned in `frontend-bundle/` and copied into the backend image at build time.
+Compose gives the containers service-name URLs, waits for all three mocks to be
+healthy before starting the backend, and stores the SQLite index in a named
+volume. The backend applies its EF migrations at startup. Host ports, the local
+hostname and mock credentials are supplied through `.env`; add the hostname to
+the Windows hosts file to browse the app as `unified.documents.local`.

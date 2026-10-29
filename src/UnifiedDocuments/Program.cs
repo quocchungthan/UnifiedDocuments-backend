@@ -1,6 +1,7 @@
 using UnifiedDocuments.Data;
 using UnifiedDocuments.Endpoints;
 using UnifiedDocuments.Sync;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -22,6 +23,12 @@ builder.Services.AddUnifiedDocumentsData(
 builder.Services.AddUnifiedDocumentsSync(builder.Configuration);
 
 var app = builder.Build();
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<UnifiedDocumentsDbContext>();
+    await database.Database.MigrateAsync();
+}
+
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();

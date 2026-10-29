@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+**/bin
+**/obj
+**/.vs
+**/node_modules
+**/dist
+**/test-results
+**/*.db
+**/*.db-shm
+**/*.db-wal
+src/UnifiedDocuments/www
+Resources
+Prod

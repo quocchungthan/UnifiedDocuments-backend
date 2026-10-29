@@ -5,6 +5,12 @@ The three external services are mocked in `DealershipSystems/`. With the .NET 10
 Then follow [Download the UI and run](./RUN%20with%20UI.md) to install the UI bundle and
 start the application.
 
+## Run the complete stack
+
+The Compose setup builds the three dealership mock APIs and backend, embeds the
+frontend bundle in `frontend-bundle/`. 
+edit `.env` follows `.env.exampl` then run `docker compose up --build -d`.
+
 ## Goal
 
 Vehicle-related documents are currently distributed across three services within

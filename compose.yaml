@@ -1,0 +1,133 @@
+name: projectloop
+
+services:
+  sales:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: DealershipSystems/SalesSystem/SalesSystem.csproj
+    command: ["SalesSystem.dll"]
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__Clients__0__ClientId: ${DEALERSHIP_CLIENT_ID:-projectloop}
+      Auth__Clients__0__ClientSecret: ${SALES_CLIENT_SECRET:-sales-mock-secret}
+    ports:
+      - "127.0.0.1:${SALES_PORT:-5101}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8080/swagger/index.html"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    volumes:
+      - type: bind
+        source: ${SALES_DOCUMENTS_PATH:-./DealershipSystems/SalesSystem/Documents}
+        target: /app/Documents
+        read_only: true
+        bind:
+          create_host_path: false
+
+  service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: DealershipSystems/ServiceSystem/ServiceSystem.csproj
+    command: ["ServiceSystem.dll"]
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__Clients__0__ClientId: ${DEALERSHIP_CLIENT_ID:-projectloop}
+      Auth__Clients__0__ClientSecret: ${SERVICE_CLIENT_SECRET:-service-mock-secret}
+    ports:
+      - "127.0.0.1:${SERVICE_PORT:-5102}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8080/swagger/index.html"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    volumes:
+      - type: bind
+        source: ${SERVICE_DOCUMENTS_PATH:-./DealershipSystems/ServiceSystem/Documents}
+        target: /app/Documents
+        read_only: true
+        bind:
+          create_host_path: false
+
+  warranty:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: DealershipSystems/WarrantySystem/WarrantySystem.csproj
+    command: ["WarrantySystem.dll"]
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__Users__0__Username: ${WARRANTY_USERNAME:-projectloop}
+      Auth__Users__0__Password: ${WARRANTY_PASSWORD:-warranty-mock-password}
+    ports:
+      - "127.0.0.1:${WARRANTY_PORT:-5103}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8080/openapi/v1.json"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    volumes:
+      - type: bind
+        source: ${WARRANTY_DOCUMENTS_PATH:-./DealershipSystems/WarrantySystem/Documents}
+        target: /app/Documents
+        read_only: true
+        bind:
+          create_host_path: false
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PROJECT_FILE: src/UnifiedDocuments/UnifiedDocuments.csproj
+        INCLUDE_FRONTEND: "true"
+    command: ["UnifiedDocuments.dll"]
+    hostname: ${UNIFIED_DOCUMENTS_HOST:-unified.documents.local}
+    restart: unless-stopped
+    depends_on:
+      sales:
+        condition: service_healthy
+      service:
+        condition: service_healthy
+      warranty:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__UnifiedDocuments: "Data Source=/data/${DATABASE_FILE:-unified-documents.db}"
+      Sync__Interval: ${SYNC_INTERVAL:-00:15:00}
+      DealershipSystems__Sales__Enabled: "true"
+      DealershipSystems__Sales__BaseUrl: http://sales:8080
+      DealershipSystems__Sales__ClientId: ${DEALERSHIP_CLIENT_ID:-projectloop}
+      DealershipSystems__Sales__ClientSecret: ${SALES_CLIENT_SECRET:-sales-mock-secret}
+      DealershipSystems__Service__Enabled: "true"
+      DealershipSystems__Service__BaseUrl: http://service:8080
+      DealershipSystems__Service__ClientId: ${DEALERSHIP_CLIENT_ID:-projectloop}
+      DealershipSystems__Service__ClientSecret: ${SERVICE_CLIENT_SECRET:-service-mock-secret}
+      DealershipSystems__Warranty__Enabled: "true"
+      DealershipSystems__Warranty__BaseUrl: http://warranty:8080
+      DealershipSystems__Warranty__Username: ${WARRANTY_USERNAME:-projectloop}
+      DealershipSystems__Warranty__Password: ${WARRANTY_PASSWORD:-warranty-mock-password}
+    ports:
+      - "127.0.0.1:${UNIFIED_DOCUMENTS_PORT:-5268}:8080"
+    volumes:
+      - unified-documents-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://localhost:8080/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  unified-documents-data:
