@@ -12,7 +12,12 @@ Requires the .NET 10 SDK. From the repository root:
 ```bash
 dotnet build src/UnifiedDocuments/UnifiedDocuments.csproj
 dotnet test src/UnifiedDocuments.Sync.Tests/UnifiedDocuments.Sync.Tests.csproj
+dotnet test src/UnifiedDocuments.Tests/UnifiedDocuments.Tests.csproj
 ```
+
+`UnifiedDocuments.Sync.Tests` covers synchronization and extraction.
+`UnifiedDocuments.Tests` covers the application HTTP endpoints using in-memory
+SQLite and a fake document source; no dealership services are required.
 
 See the [system design](Prod/02-system-design.md) and the
 [dealership mock run instructions](DealershipSystems/README.md#run).

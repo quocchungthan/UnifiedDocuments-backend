@@ -13,7 +13,7 @@ namespace UnifiedDocuments.Sync.Tests;
 public sealed class DocumentSyncWorkerTests
 {
     [Fact]
-    public async Task ExecuteAsync_syncs_sources_concurrently_and_isolates_a_source_failure()
+    public async Task Execute_OneSourceFails_SyncsSourcesConcurrentlyAndCompletesOtherSourceAsync()
     {
         var databasePath = Path.Combine(Path.GetTempPath(), $"projectloop-sync-{Guid.NewGuid():N}.db");
         var barrier = new SourceBarrier(2);

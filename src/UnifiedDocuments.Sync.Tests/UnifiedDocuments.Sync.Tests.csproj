@@ -22,8 +22,6 @@
   <ItemGroup>
     <ProjectReference Include="..\UnifiedDocuments.Sync\UnifiedDocuments.Sync.csproj" />
     <ProjectReference Include="..\UnifiedDocuments.Data\UnifiedDocuments.Data.csproj" />
-    <ProjectReference Include="..\UnifiedDocuments\UnifiedDocuments.csproj" />
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

@@ -2,12 +2,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace UnifiedDocuments.Sync.Tests;
+namespace UnifiedDocuments.Tests;
 
 public sealed class DocumentListEndpointTests
 {
     [Fact]
-    public async Task GetUnlinked_returns_only_documents_without_vin_links_in_date_order()
+    public async Task GetUnlinked_LinkedAndUnlinkedDocuments_ReturnsOnlyUnlinkedMetadataInDateOrderAsync()
     {
         var linked = DocumentApiFixture.Document("linked", [], vin: "1HGCM82633A004352", day: 3);
         linked.Vins.Add(new() { Vin = "3DDDDDDDDDDDDDDDD" });
@@ -34,7 +34,7 @@ public sealed class DocumentListEndpointTests
     }
 
     [Fact]
-    public async Task GetUnlinked_sorts_by_modified_date_then_unique_id_for_stable_results()
+    public async Task GetUnlinked_EqualDatesAndOlderModification_SortsByEffectiveDateThenDescendingIdAsync()
     {
         var recentlyIndexed = DocumentApiFixture.Document("old-modification", [], day: 5);
         recentlyIndexed.ModifiedAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
@@ -55,7 +55,7 @@ public sealed class DocumentListEndpointTests
     [Theory]
     [InlineData("/documents/unlinked")]
     [InlineData("/vehicles/1HGCM82633A004352/documents")]
-    public async Task GetList_returns_no_items_when_no_documents_match(string path)
+    public async Task GetList_NoMatchingDocuments_ReturnsEmptyListWithoutFetchingContentAsync(string path)
     {
         await using var api = await DocumentApiFixture.CreateAsync();
 
@@ -69,7 +69,7 @@ public sealed class DocumentListEndpointTests
     [Theory]
     [InlineData("", 50)]
     [InlineData("?pageSize=100", 100)]
-    public async Task GetUnlinked_bounds_each_page_and_covers_equal_date_rows_without_duplicates(string query, int expectedSize)
+    public async Task GetUnlinked_MultiplePagesWithEqualDates_ReturnsAllDocumentsWithinPageLimitWithoutDuplicatesAsync(string query, int expectedSize)
     {
         var documents = Enumerable.Range(1, 123)
             .Select(index => DocumentApiFixture.Document($"doc-{index}", [], day: index % 3 + 1))
@@ -102,7 +102,7 @@ public sealed class DocumentListEndpointTests
     [InlineData("?cursor=")]
     [InlineData("?cursor=not-a-cursor")]
     [InlineData("?cursor=bnVsbA")]
-    public async Task GetUnlinked_rejects_invalid_paging_values_with_a_message(string query)
+    public async Task GetUnlinked_InvalidPagingValues_ReturnsBadRequestWithValidationMessageAsync(string query)
     {
         await using var api = await DocumentApiFixture.CreateAsync();
 
@@ -116,7 +116,7 @@ public sealed class DocumentListEndpointTests
     [Theory]
     [InlineData("/documents/unlinked")]
     [InlineData("/vehicles/1HGCM82633A004352/documents")]
-    public async Task GetList_revalidates_unchanged_results_with_private_cache_headers(string path)
+    public async Task GetList_MatchingETag_ReturnsNotModifiedWithPrivateCacheHeadersAndEmptyBodyAsync(string path)
     {
         await using var api = await DocumentApiFixture.CreateAsync(
             DocumentApiFixture.Document("claim", [], vin: "1HGCM82633A004352"));
@@ -134,7 +134,7 @@ public sealed class DocumentListEndpointTests
     }
 
     [Fact]
-    public async Task GetByVin_excludes_unlinked_and_other_vehicle_documents()
+    public async Task GetByVin_LowercaseVin_ReturnsOnlyMatchingVehicleDocumentsWithoutFetchingContentAsync()
     {
         await using var api = await DocumentApiFixture.CreateAsync(
             DocumentApiFixture.Document("match", [], vin: "1HGCM82633A004352"),
@@ -149,7 +149,7 @@ public sealed class DocumentListEndpointTests
     }
 
     [Fact]
-    public async Task GetVehicleIdentifiers_returns_distinct_best_matches_first()
+    public async Task GetVehicleIdentifiers_LowercasePartialQuery_ReturnsDistinctMatchesWithPrefixesFirstAsync()
     {
         await using var api = await DocumentApiFixture.CreateAsync(
             DocumentApiFixture.Document("prefix-z", [], vin: "1HGCM82633A004352"),
@@ -160,6 +160,7 @@ public sealed class DocumentListEndpointTests
 
         var identifiers = await api.Client.GetFromJsonAsync<string[]>("/vehicles/identifiers?query=1hg");
 
+        Assert.NotNull(identifiers);
         Assert.Equal(
             ["1HGCM82633A004351", "1HGCM82633A004352", "21HGCM82633A00435"],
             identifiers);
@@ -167,7 +168,7 @@ public sealed class DocumentListEndpointTests
     }
 
     [Fact]
-    public async Task GetVehicleIdentifiers_returns_at_most_ten_distinct_values_for_empty_query()
+    public async Task GetVehicleIdentifiers_EmptyQueryWithMoreThanTenMatches_ReturnsFirstTenDistinctVinsAsync()
     {
         var documents = Enumerable.Range(0, 12)
             .Select(index => DocumentApiFixture.Document(
@@ -189,7 +190,7 @@ public sealed class DocumentListEndpointTests
     [InlineData("short")]
     [InlineData("IIIIIIIIIIIIIIIII")]
     [InlineData("12345678901234567")]
-    public async Task GetByVin_rejects_invalid_vin_with_a_validation_message(string vin)
+    public async Task GetByVin_InvalidVin_ReturnsBadRequestWithValidationMessageAsync(string vin)
     {
         await using var api = await DocumentApiFixture.CreateAsync();
 

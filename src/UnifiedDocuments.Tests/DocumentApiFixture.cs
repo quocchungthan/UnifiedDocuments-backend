@@ -12,7 +12,7 @@ using UnifiedDocuments.Data.Entities;
 using UnifiedDocuments.Endpoints;
 using UnifiedDocuments.Sync.Sources;
 
-namespace UnifiedDocuments.Sync.Tests;
+namespace UnifiedDocuments.Tests;
 
 internal sealed class DocumentApiFixture : IAsyncDisposable
 {

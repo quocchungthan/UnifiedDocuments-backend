@@ -17,7 +17,7 @@ public sealed class DocumentSynchronizerTests
     [Theory]
     [InlineData("Repair order for VIN 1HGCM82633A004352", "1HGCM82633A004352")]
     [InlineData("General workshop instructions without a vehicle number", null)]
-    public async Task SyncAsync_retains_indexed_metadata_with_or_without_a_detected_vin(string content, string? expectedVin)
+    public async Task Sync_DocumentWithOrWithoutVin_IndexesMetadataAndSkipsUnchangedContentAsync(string content, string? expectedVin)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -47,7 +47,7 @@ public sealed class DocumentSynchronizerTests
     }
 
     [Fact]
-    public async Task SyncAsync_times_out_a_stalled_document_body()
+    public async Task Sync_StalledDocumentBody_ThrowsTimeoutWithoutIndexingDocumentAsync()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -70,7 +70,7 @@ public sealed class DocumentSynchronizerTests
     }
 
     [Fact]
-    public async Task SyncAsync_updates_vin_links_and_removes_documents_missing_from_a_successful_listing()
+    public async Task Sync_DocumentChangedThenRemovedFromSuccessfulListing_UpdatesVinLinksThenDeletesDocumentAsync()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -104,7 +104,7 @@ public sealed class DocumentSynchronizerTests
     }
 
     [Fact]
-    public async Task SyncAsync_retains_documents_when_source_listing_fails()
+    public async Task Sync_SourceListingFails_ThrowsAndRetainsIndexedDocumentsAsync()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -128,7 +128,7 @@ public sealed class DocumentSynchronizerTests
     }
 
     [Fact]
-    public void AddUnifiedDocumentsSync_does_not_register_disabled_provider_or_require_credentials()
+    public void AddUnifiedDocumentsSync_AllProvidersDisabledWithoutCredentials_RegistersNoSourcesAndResolvesTextExtractor()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -149,7 +149,7 @@ public sealed class DocumentSynchronizerTests
     }
 
     [Fact]
-    public void AddUnifiedDocumentsSync_registers_only_enabled_provider()
+    public void AddUnifiedDocumentsSync_OnlySalesEnabled_RegistersOnlySalesSource()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>

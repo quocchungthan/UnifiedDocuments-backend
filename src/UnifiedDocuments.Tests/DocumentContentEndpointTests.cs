@@ -2,14 +2,14 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace UnifiedDocuments.Sync.Tests;
+namespace UnifiedDocuments.Tests;
 
 public sealed class DocumentContentEndpointTests
 {
     [Theory]
     [InlineData(false, "inline")]
     [InlineData(true, "attachment")]
-    public async Task GetContent_returns_original_bytes_and_expected_disposition(bool download, string disposition)
+    public async Task GetContent_DownloadFlag_ReturnsOriginalBytesWithRequestedDispositionAndCacheHeadersAsync(bool download, string disposition)
     {
         var content = Encoding.UTF8.GetBytes("PDF bytes for 1HGCM82633A004352");
         var document = DocumentApiFixture.Document("claim form", content);
@@ -33,7 +33,7 @@ public sealed class DocumentContentEndpointTests
     [InlineData("weak", false)]
     [InlineData("wildcard", false)]
     [InlineData("different", true)]
-    public async Task GetContent_revalidates_cached_bytes(string tagKind, bool shouldFetch)
+    public async Task GetContent_ConditionalRequestForCachedBytes_ReturnsNotModifiedOnlyForMatchingTagsWithoutRefetchingAsync(string tagKind, bool shouldFetch)
     {
         var content = Encoding.UTF8.GetBytes("original bytes");
         var document = DocumentApiFixture.Document("claim", content);
@@ -57,7 +57,7 @@ public sealed class DocumentContentEndpointTests
     }
 
     [Fact]
-    public async Task GetContent_uses_the_downloaded_bytes_hash_when_the_index_is_stale()
+    public async Task GetContent_StaleIndexHash_UsesDownloadedBytesHashForETagAndRevalidationAsync()
     {
         var indexedContent = Encoding.UTF8.GetBytes("indexed bytes");
         var currentContent = Encoding.UTF8.GetBytes("current upstream bytes");
@@ -88,7 +88,7 @@ public sealed class DocumentContentEndpointTests
     [Theory]
     [InlineData(HttpStatusCode.NotFound, HttpStatusCode.NotFound)]
     [InlineData(HttpStatusCode.ServiceUnavailable, HttpStatusCode.ServiceUnavailable)]
-    public async Task GetContent_maps_upstream_http_failures(HttpStatusCode upstreamStatus, HttpStatusCode expectedStatus)
+    public async Task GetContent_UpstreamNotFoundOrServiceUnavailable_ReturnsCorrespondingHttpStatusAsync(HttpStatusCode upstreamStatus, HttpStatusCode expectedStatus)
     {
         var document = DocumentApiFixture.Document("claim", []);
         await using var api = await DocumentApiFixture.CreateAsync(document);
@@ -102,7 +102,7 @@ public sealed class DocumentContentEndpointTests
     [Theory]
     [InlineData(10 * 1024 * 1024, 1, true)]
     [InlineData(10 * 1024 * 1024 + 1, 2, false)]
-    public async Task GetContent_caches_only_documents_at_or_below_the_size_limit(int size, int expectedFetches, bool hasEtag)
+    public async Task GetContent_DocumentAtOrAboveCacheSizeLimit_CachesAndSetsETagOnlyWithinLimitAsync(int size, int expectedFetches, bool hasEtag)
     {
         var content = new byte[size];
         Array.Fill(content, (byte)'x');
@@ -122,7 +122,7 @@ public sealed class DocumentContentEndpointTests
     [Theory]
     [InlineData("unknown", "Warranty")]
     [InlineData("claim", "Disabled")]
-    public async Task GetContent_returns_not_found_for_unknown_documents_or_disabled_sources(string id, string source)
+    public async Task GetContent_UnknownDocumentOrDisabledSource_ReturnsNotFoundWithoutFetchingContentAsync(string id, string source)
     {
         await using var api = await DocumentApiFixture.CreateAsync(
             DocumentApiFixture.Document("claim", [], source: "Disabled"));
@@ -137,7 +137,7 @@ public sealed class DocumentContentEndpointTests
     [InlineData("text/html")]
     [InlineData("image/svg+xml")]
     [InlineData("application/json")]
-    public async Task GetContent_downloads_active_formats_instead_of_rendering_them(string contentType)
+    public async Task GetContent_ActiveContentType_ReturnsAttachmentWithNoSniffHeaderAsync(string contentType)
     {
         byte[] content = [1, 2, 3];
         await using var api = await DocumentApiFixture.CreateAsync(

@@ -22,7 +22,7 @@ public sealed class TextExtractorTests
     [InlineData("application/json")]
     [InlineData("application/xml")]
     [InlineData("image/svg+xml")]
-    public void Extract_uses_text_strategy_for_supported_textual_formats(string mediaType)
+    public void Extract_SupportedTextualFormatWithCharset_ReturnsOriginalTextIncludingVin(string mediaType)
     {
         const string text = "Vehicle VIN: 1HGCM82633A004352";
         var content = Encoding.UTF8.GetBytes(text);
@@ -34,7 +34,7 @@ public sealed class TextExtractorTests
     }
 
     [Fact]
-    public void Extract_uses_email_strategy_for_rfc822_content()
+    public void Extract_Rfc822Email_ReturnsSubjectAndBodyText()
     {
         const string email = """
             From: service@example.test
@@ -53,7 +53,7 @@ public sealed class TextExtractorTests
     }
 
     [Fact]
-    public void Extract_falls_back_to_raw_text_when_a_parser_rejects_malformed_content()
+    public void Extract_MalformedPdf_ReturnsVinFromRawTextFallback()
     {
         const string text = "Malformed PDF with VIN 1HGCM82633A004352";
 
