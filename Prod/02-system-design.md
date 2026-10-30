@@ -16,6 +16,8 @@ The supplied scenario names Sales and Service as the required pair. Warranty is
 an additional mock source in this repository; it extends the same connector
 contract but does not replace the Sales-and-Service acceptance criteria.
 
+![Result](./IMG_9986.png)
+
 ## Decision: pre-index, do not federate at query time
 
 A live search would need to download and read every document from all three
