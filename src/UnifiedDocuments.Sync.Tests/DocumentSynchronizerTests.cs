@@ -15,9 +15,12 @@ namespace UnifiedDocuments.Sync.Tests;
 public sealed class DocumentSynchronizerTests
 {
     [Theory]
-    [InlineData("Repair order for VIN 1HGCM82633A004352", "1HGCM82633A004352")]
-    [InlineData("General workshop instructions without a vehicle number", null)]
-    public async Task Sync_DocumentWithOrWithoutVin_IndexesMetadataAndSkipsUnchangedContentAsync(string content, string? expectedVin)
+    [InlineData("Repair order for VIN 1HGCM82633A004352", "1HGCM82633A004352", true)]
+    [InlineData("General workshop instructions without a vehicle number", null, true)]
+    [InlineData("Repair order for VIN 1HGCM82633A004352", "1HGCM82633A004352", false)]
+    [InlineData("General workshop instructions without a vehicle number", null, false)]
+    public async Task Sync_DocumentWithOrWithoutVin_IndexesMetadataAndReportsUnchangedOnSecondSyncAsync(
+        string content, string? expectedVin, bool hasModifiedAt)
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -27,7 +30,7 @@ public sealed class DocumentSynchronizerTests
         await using var db = new UnifiedDocumentsDbContext(options);
         await db.Database.EnsureCreatedAsync();
 
-        var modifiedAt = DateTimeOffset.UtcNow;
+        DateTimeOffset? modifiedAt = hasModifiedAt ? DateTimeOffset.UtcNow : null;
         var source = new FakeDocumentSource("TestProvider", "doc-1", modifiedAt, content);
         var synchronizer = CreateSynchronizer(db);
 
@@ -43,7 +46,7 @@ public sealed class DocumentSynchronizerTests
         var unchanged = await synchronizer.SyncAsync(source, CancellationToken.None);
 
         Assert.Equal(new SyncResult("TestProvider", 0, 0, 1, 0), unchanged);
-        Assert.Equal(1, source.OpenCount);
+        Assert.Equal(hasModifiedAt ? 1 : 2, source.OpenCount);
     }
 
     [Fact]
@@ -192,7 +195,7 @@ public sealed class DocumentSynchronizerTests
     private sealed class FakeDocumentSource(
         string sourceName,
         string documentId,
-        DateTimeOffset modifiedAt,
+        DateTimeOffset? modifiedAt,
         string content) : IDocumentSource
     {
         public string SourceName => sourceName;

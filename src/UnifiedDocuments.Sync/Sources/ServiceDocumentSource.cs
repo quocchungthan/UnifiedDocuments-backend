@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using UnifiedDocuments.Sync.Sources.Contracts;
 
 namespace UnifiedDocuments.Sync.Sources;
 
@@ -19,11 +20,10 @@ public sealed class ServiceDocumentSource(HttpClient http) : IDocumentSource
         string? next = "service-api/v2/documents?offset=0&limit=50";
         while (next is not null)
         {
-            var result = await http.GetFromJsonAsync<ServicePage>(next.TrimStart('/'), Json, cancellationToken)
-                ?? throw new InvalidOperationException("Service returned an empty page.");
+            var result = await GetPageAsync(next, cancellationToken);
 
             foreach (var item in result.Data)
-                yield return new ListedDocument(item.RecordId, item.FileName, item.MimeType, item.DocumentKind, item.UploadedAt);
+                yield return ToListedDocument(item);
 
             next = result.Links.Next;
         }
@@ -32,9 +32,10 @@ public sealed class ServiceDocumentSource(HttpClient http) : IDocumentSource
     public Task<Stream> OpenAsync(string sourceDocumentId, CancellationToken cancellationToken) =>
         http.GetStreamAsync($"service-api/v2/documents/{Uri.EscapeDataString(sourceDocumentId)}/file", cancellationToken);
 
-    private sealed record ServicePage(List<ServiceItem> Data, ServiceLinks Links);
+    private async Task<ServicePage> GetPageAsync(string next, CancellationToken cancellationToken) =>
+        await http.GetFromJsonAsync<ServicePage>(next.TrimStart('/'), Json, cancellationToken)
+            ?? throw new InvalidOperationException("Service returned an empty page.");
 
-    private sealed record ServiceItem(string RecordId, string DocumentKind, string FileName, string MimeType, DateTimeOffset UploadedAt);
-
-    private sealed record ServiceLinks(string? Next);
+    private static ListedDocument ToListedDocument(ServiceItem item) =>
+        new(item.RecordId, item.FileName, item.MimeType, item.DocumentKind, item.UploadedAt);
 }

@@ -148,8 +148,10 @@ public sealed class DocumentListEndpointTests
         Assert.Equal(0, api.Source.OpenCount);
     }
 
-    [Fact]
-    public async Task GetVehicleIdentifiers_LowercasePartialQuery_ReturnsDistinctMatchesWithPrefixesFirstAsync()
+    [Theory]
+    [InlineData("1hg")]
+    [InlineData("%20%201hg%20%20")]
+    public async Task GetVehicleIdentifiers_LowercasePartialQuery_ReturnsDistinctMatchesWithPrefixesFirstAsync(string query)
     {
         await using var api = await DocumentApiFixture.CreateAsync(
             DocumentApiFixture.Document("prefix-z", [], vin: "1HGCM82633A004352"),
@@ -158,12 +160,42 @@ public sealed class DocumentListEndpointTests
             DocumentApiFixture.Document("duplicate", [], vin: "1HGCM82633A004351"),
             DocumentApiFixture.Document("unlinked", []));
 
-        var identifiers = await api.Client.GetFromJsonAsync<string[]>("/vehicles/identifiers?query=1hg");
+        var identifiers = await api.Client.GetFromJsonAsync<string[]>($"/vehicles/identifiers?query={query}");
 
         Assert.NotNull(identifiers);
         Assert.Equal(
             ["1HGCM82633A004351", "1HGCM82633A004352", "21HGCM82633A00435"],
             identifiers);
+        Assert.Equal(0, api.Source.OpenCount);
+    }
+
+    [Theory]
+    [InlineData("1HGCM82633A004352")]
+    [InlineData("%20%201hgcm82633a004352%20%20")]
+    public async Task GetVehicleIdentifiers_FullVinQuery_ReturnsOnlyExactMatchAsync(string query)
+    {
+        await using var api = await DocumentApiFixture.CreateAsync(
+            DocumentApiFixture.Document("match", [], vin: "1HGCM82633A004352"),
+            DocumentApiFixture.Document("duplicate", [], vin: "1HGCM82633A004352"),
+            DocumentApiFixture.Document("other", [], vin: "1HGCM82633A004351"));
+
+        var identifiers = await api.Client.GetFromJsonAsync<string[]>($"/vehicles/identifiers?query={query}");
+
+        Assert.NotNull(identifiers);
+        Assert.Equal("1HGCM82633A004352", Assert.Single(identifiers));
+        Assert.Equal(0, api.Source.OpenCount);
+    }
+
+    [Fact]
+    public async Task GetVehicleIdentifiers_NoMatchingVin_ReturnsEmptyArrayAsync()
+    {
+        await using var api = await DocumentApiFixture.CreateAsync(
+            DocumentApiFixture.Document("other", [], vin: "1HGCM82633A004352"));
+
+        var identifiers = await api.Client.GetFromJsonAsync<string[]>("/vehicles/identifiers?query=ZZZ");
+
+        Assert.NotNull(identifiers);
+        Assert.Empty(identifiers);
         Assert.Equal(0, api.Source.OpenCount);
     }
 

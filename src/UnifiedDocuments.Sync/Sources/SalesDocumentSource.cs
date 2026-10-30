@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using UnifiedDocuments.Sync.Sources.Contracts;
 
 namespace UnifiedDocuments.Sync.Sources;
 
@@ -14,11 +15,10 @@ public sealed class SalesDocumentSource(HttpClient http) : IDocumentSource
     {
         for (var page = 1; ; page++)
         {
-            var result = await http.GetFromJsonAsync<SalesPage>($"api/v1/documents?page={page}&pageSize={PageSize}", cancellationToken)
-                ?? throw new InvalidOperationException("Sales returned an empty page.");
+            var result = await GetPageAsync(page, cancellationToken);
 
             foreach (var item in result.Items)
-                yield return new ListedDocument(item.DocumentId, item.FileName, item.ContentType, item.DealNumber, item.LastModifiedUtc);
+                yield return ToListedDocument(item);
 
             if (page >= result.TotalPages)
                 yield break;
@@ -28,7 +28,10 @@ public sealed class SalesDocumentSource(HttpClient http) : IDocumentSource
     public Task<Stream> OpenAsync(string sourceDocumentId, CancellationToken cancellationToken) =>
         http.GetStreamAsync($"api/v1/documents/{Uri.EscapeDataString(sourceDocumentId)}/content", cancellationToken);
 
-    private sealed record SalesPage(int TotalPages, List<SalesItem> Items);
+    private async Task<SalesPage> GetPageAsync(int page, CancellationToken cancellationToken) =>
+        await http.GetFromJsonAsync<SalesPage>($"api/v1/documents?page={page}&pageSize={PageSize}", cancellationToken)
+            ?? throw new InvalidOperationException("Sales returned an empty page.");
 
-    private sealed record SalesItem(string DocumentId, string? DealNumber, string FileName, string ContentType, DateTimeOffset LastModifiedUtc);
+    private static ListedDocument ToListedDocument(SalesItem item) =>
+        new(item.DocumentId, item.FileName, item.ContentType, item.DealNumber, item.LastModifiedUtc);
 }

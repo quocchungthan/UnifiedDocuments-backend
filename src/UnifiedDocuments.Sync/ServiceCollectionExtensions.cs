@@ -23,6 +23,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<DocumentSynchronizer>();
         services.AddHostedService<DocumentSyncWorker>();
 
+        AddEnabledDocumentSources(services, systems);
+        return services;
+    }
+
+    private static void AddEnabledDocumentSources(IServiceCollection services, DealershipSystemsOptions systems)
+    {
         if (systems.Sales.Enabled)
         {
             ValidateOAuth("Sales", systems.Sales);
@@ -41,10 +47,8 @@ public static class ServiceCollectionExtensions
             services.AddHttpClient<WarrantyDocumentSource>(http => http.BaseAddress = WithTrailingSlash(systems.Warranty.BaseUrl!))
                 .AddHttpMessageHandler(() => new BasicAuthHandler(systems.Warranty.Username!, systems.Warranty.Password!))
                 .AddStandardResilienceHandler(ConfigureResilience);
-            services.AddTransient<IDocumentSource>(sp => sp.GetRequiredService<WarrantyDocumentSource>());
+            services.AddTransient<IDocumentSource>(provider => provider.GetRequiredService<WarrantyDocumentSource>());
         }
-
-        return services;
     }
 
     private static void AddOAuthSource<TSource>(IServiceCollection services, string name, OAuthSourceOptions options, string tokenPath)
@@ -53,16 +57,16 @@ public static class ServiceCollectionExtensions
         var tokenClientName = $"{name}.Token";
         services.AddHttpClient(tokenClientName, http => http.BaseAddress = WithTrailingSlash(options.BaseUrl!))
             .AddStandardResilienceHandler(ConfigureResilience);
-        services.AddKeyedSingleton(name, (sp, _) => new ClientCredentialsTokenProvider(
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(tokenClientName),
+        services.AddKeyedSingleton(name, (provider, _) => new ClientCredentialsTokenProvider(
+            provider.GetRequiredService<IHttpClientFactory>().CreateClient(tokenClientName),
             tokenPath,
             options.ClientId!,
             options.ClientSecret!));
 
         services.AddHttpClient<TSource>(http => http.BaseAddress = WithTrailingSlash(options.BaseUrl!))
-            .AddHttpMessageHandler(sp => new BearerTokenHandler(sp.GetRequiredKeyedService<ClientCredentialsTokenProvider>(name)))
+            .AddHttpMessageHandler(provider => new BearerTokenHandler(provider.GetRequiredKeyedService<ClientCredentialsTokenProvider>(name)))
             .AddStandardResilienceHandler(ConfigureResilience);
-        services.AddTransient<IDocumentSource>(sp => sp.GetRequiredService<TSource>());
+        services.AddTransient<IDocumentSource>(provider => provider.GetRequiredService<TSource>());
     }
 
     private static void ValidateOAuth(string name, OAuthSourceOptions options)

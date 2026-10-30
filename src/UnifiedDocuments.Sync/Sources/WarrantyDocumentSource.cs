@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using UnifiedDocuments.Sync.Sources.Contracts;
 
 namespace UnifiedDocuments.Sync.Sources;
 
@@ -17,19 +18,11 @@ public sealed class WarrantyDocumentSource(HttpClient http) : IDocumentSource
         string? pageToken = null;
         do
         {
-            using var response = await http.PostAsJsonAsync(
-                "warranty/v1/claims/documents/search",
-                new SearchRequest(null, pageToken, MaxResults),
-                Json,
-                cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            var result = await response.Content.ReadFromJsonAsync<SearchResponse>(Json, cancellationToken)
-                ?? throw new InvalidOperationException("Warranty returned an empty page.");
+            var result = await SearchPageAsync(pageToken, cancellationToken);
 
             // Warranty exposes no modification time, so ModifiedAt stays null and the content hash decides.
             foreach (var item in result.Documents)
-                yield return new ListedDocument(item.Id, item.FileName, item.MediaType, item.ClaimNumber, null);
+                yield return ToListedDocument(item);
 
             pageToken = result.NextPageToken;
         }
@@ -39,9 +32,19 @@ public sealed class WarrantyDocumentSource(HttpClient http) : IDocumentSource
     public Task<Stream> OpenAsync(string sourceDocumentId, CancellationToken cancellationToken) =>
         http.GetStreamAsync($"warranty/v1/documents/{Uri.EscapeDataString(sourceDocumentId)}", cancellationToken);
 
-    private sealed record SearchRequest(string? ClaimNumber, string? PageToken, int MaxResults);
+    private async Task<WarrantySearchResponse> SearchPageAsync(string? pageToken, CancellationToken cancellationToken)
+    {
+        using var response = await http.PostAsJsonAsync(
+            "warranty/v1/claims/documents/search",
+            new WarrantySearchRequest(null, pageToken, MaxResults),
+            Json,
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
 
-    private sealed record SearchResponse(List<WarrantyItem> Documents, string? NextPageToken);
+        return await response.Content.ReadFromJsonAsync<WarrantySearchResponse>(Json, cancellationToken)
+            ?? throw new InvalidOperationException("Warranty returned an empty page.");
+    }
 
-    private sealed record WarrantyItem(string Id, string ClaimNumber, string MediaType, string FileName);
+    private static ListedDocument ToListedDocument(WarrantyItem item) =>
+        new(item.Id, item.FileName, item.MediaType, item.ClaimNumber, null);
 }
