@@ -1,0 +1,7 @@
+SYNTHETIC SALES RECORD - not a real transaction
+Deal: DEAL-1003
+Vehicle: Honda Legend demonstration vehicle
+VIN: JH4KA8260MC000001
+Agreement date: 2026-09-01
+Sale price USD: 12500
+Status: Signed; delivery inspection pending.

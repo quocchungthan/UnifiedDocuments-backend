@@ -1,0 +1,7 @@
+SYNTHETIC WARRANTY DECISION
+Claim: WC-2026-0101
+VIN: JH4KA8260MC000001
+Related repair order: RO-57001
+Decision date: 2026-09-18
+Decision: Approved under demonstration-vehicle component coverage.
+Authorized work: Front brake component replacement.

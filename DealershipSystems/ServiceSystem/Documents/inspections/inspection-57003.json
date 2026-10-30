@@ -1,0 +1,10 @@
+{
+  "synthetic": true,
+  "inspectionId": "INSP-57003",
+  "vin": "1FTFW1ET1EFA12345",
+  "vehicle": "Ford F-150 demonstration vehicle",
+  "inspectedOn": "2026-09-12",
+  "odometerKm": 97300,
+  "findings": ["Rear differential seal seepage", "Tire pressures corrected"],
+  "result": "Warranty review requested"
+}

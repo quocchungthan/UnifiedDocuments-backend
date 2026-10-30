@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<repairOrder synthetic="true" number="RO-57004">
+  <vin>WBA3A5C50CF256789</vin>
+  <visitedOn>2026-09-13</visitedOn>
+  <complaint>Intermittent coolant level warning</complaint>
+  <finding>Expansion tank sensor fault</finding>
+  <action>Sensor replaced; warning cleared after road test</action>
+</repairOrder>

@@ -43,5 +43,221 @@
     "issuedOn": "2025-07-01",
     "mediaType": "text/plain",
     "path": "claims/WC-2025-0042/goodwill-approval.txt"
+  },
+  {
+    "id": "WD-0006",
+    "claimNumber": "WC-2026-0101",
+    "title": "Synthetic brake component approval",
+    "documentType": "decision",
+    "issuedOn": "2026-09-18",
+    "mediaType": "text/plain",
+    "path": "claims/WC-2026-0101/brake-approval.txt"
+  },
+  {
+    "id": "WD-0007",
+    "claimNumber": "EXT-POLICY-2026-0102",
+    "title": "Synthetic extended coverage certificate",
+    "documentType": "policy",
+    "issuedOn": "2026-09-19",
+    "mediaType": "application/json",
+    "path": "policies/coverage-2026-0102.json"
+  },
+  {
+    "id": "WD-0008",
+    "claimNumber": "WC-2026-0103",
+    "title": "Synthetic differential seal assessment",
+    "documentType": "assessment",
+    "issuedOn": "2026-09-20",
+    "mediaType": "text/markdown",
+    "path": "claims/WC-2026-0103/seal-assessment.md"
+  },
+  {
+    "id": "WD-0009",
+    "claimNumber": "WC-2026-0104",
+    "title": "Synthetic coolant sensor decision",
+    "documentType": "decision",
+    "issuedOn": "2026-09-21",
+    "mediaType": "application/xml",
+    "path": "claims/WC-2026-0104/sensor-decision.xml"
+  },
+  {
+    "id": "WD-0010",
+    "claimNumber": "WC-2026-0105",
+    "title": "Synthetic charging campaign confirmation",
+    "documentType": "correspondence",
+    "issuedOn": "2026-09-22",
+    "mediaType": "message/rfc822",
+    "path": "claims/WC-2026-0105/campaign-confirmation.eml"
+  },
+  {
+    "id": "WD-0011",
+    "claimNumber": "WC-2026-0106",
+    "title": "Synthetic tensioner coverage decision",
+    "documentType": "decision",
+    "issuedOn": "2026-09-23",
+    "mediaType": "text/html",
+    "path": "claims/WC-2026-0106/tensioner-decision.html"
+  },
+  {
+    "id": "WD-0012",
+    "claimNumber": "WC-2026-0107",
+    "title": "Synthetic fleet claim review",
+    "documentType": "assessment",
+    "issuedOn": "2026-09-24",
+    "mediaType": "text/csv",
+    "path": "claims/WC-2026-0107/fleet-review.csv"
+  },
+  {
+    "id": "WD-0013",
+    "claimNumber": "WC-2026-0108",
+    "title": "Synthetic unassigned evidence request",
+    "documentType": "correspondence",
+    "issuedOn": "2026-09-25",
+    "mediaType": "text/plain",
+    "path": "claims/WC-2026-0108/evidence-request.txt"
+  },
+  {
+    "id": "WD-0014",
+    "claimNumber": "WC-2026-0101",
+    "title": "Synthetic brake approval PDF",
+    "documentType": "decision",
+    "issuedOn": "2026-09-18",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0101/brake-approval.pdf"
+  },
+  {
+    "id": "WD-0015",
+    "claimNumber": "EXT-POLICY-2026-0102",
+    "title": "Synthetic coverage certificate PDF",
+    "documentType": "policy",
+    "issuedOn": "2026-09-19",
+    "mediaType": "application/pdf",
+    "path": "policies/coverage-2026-0102.pdf"
+  },
+  {
+    "id": "WD-0016",
+    "claimNumber": "WC-2026-0107",
+    "title": "Synthetic fleet review PDF",
+    "documentType": "assessment",
+    "issuedOn": "2026-09-24",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0107/fleet-review.pdf"
+  },
+  {
+    "id": "WD-0017",
+    "claimNumber": "WC-2026-0108",
+    "title": "Synthetic unassigned evidence request PDF",
+    "documentType": "correspondence",
+    "issuedOn": "2026-09-25",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0108/evidence-request.pdf"
+  },
+  {
+    "id": "WD-0018",
+    "claimNumber": "WC-2026-0201",
+    "title": "Synthetic Nissan Altima battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-01",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0201/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0019",
+    "claimNumber": "WC-2026-0202",
+    "title": "Synthetic Acura TL battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-02",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0202/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0020",
+    "claimNumber": "WC-2026-0203",
+    "title": "Synthetic Chrysler Pacifica battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-03",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0203/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0021",
+    "claimNumber": "WC-2026-0204",
+    "title": "Synthetic Toyota RAV4 battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-04",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0204/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0022",
+    "claimNumber": "WC-2026-0205",
+    "title": "Synthetic Ford Fusion battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-05",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0205/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0023",
+    "claimNumber": "WC-2026-0206",
+    "title": "Synthetic Volkswagen Jetta battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-06",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0206/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0024",
+    "claimNumber": "WC-2026-0207",
+    "title": "Synthetic Subaru Outback battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-07",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0207/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0025",
+    "claimNumber": "WC-2026-0208",
+    "title": "Synthetic Nissan Rogue battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-08",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0208/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0026",
+    "claimNumber": "WC-2026-0209",
+    "title": "Synthetic Subaru WRX battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-09",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0209/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0027",
+    "claimNumber": "WC-2026-0210",
+    "title": "Synthetic Mazda 3 battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-10",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0210/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0028",
+    "claimNumber": "WC-2026-0211",
+    "title": "Synthetic Kia Optima battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-11",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0211/battery-decision.pdf"
+  },
+  {
+    "id": "WD-0029",
+    "claimNumber": "WC-2026-0212",
+    "title": "Synthetic Volvo S60 battery decision",
+    "documentType": "decision",
+    "issuedOn": "2026-10-12",
+    "mediaType": "application/pdf",
+    "path": "claims/WC-2026-0212/battery-decision.pdf"
   }
 ]

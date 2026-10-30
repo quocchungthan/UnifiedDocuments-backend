@@ -1,0 +1,12 @@
+From: campaigns@example.test
+To: workshop@example.test
+Subject: Synthetic campaign EV-2026-07 service completion
+Date: Mon, 14 Sep 2026 09:30:00 +0000
+Message-ID: <campaign-ev-2026-07@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Synthetic workshop campaign; not an actual manufacturer recall.
+Vehicle VIN: 5YJ3E1EA7KF123456
+Charging-port latch inspected and adjusted on 2026-09-14.
+Post-service charging session completed successfully.

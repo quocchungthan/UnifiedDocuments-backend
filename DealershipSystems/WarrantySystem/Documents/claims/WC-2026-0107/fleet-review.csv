@@ -1,0 +1,3 @@
+record_type,claim_number,vin,reviewed_on,status
+synthetic,WC-2026-0107,1FTFW1ET1EFA12345,2026-09-24,awaiting-evidence
+synthetic,WC-2026-0107,WBA3A5C50CF256789,2026-09-24,approved

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<claimDecision synthetic="true">
+  <claimNumber>WC-2026-0104</claimNumber>
+  <vin>WBA3A5C50CF256789</vin>
+  <repairOrder>RO-57004</repairOrder>
+  <issuedOn>2026-09-21</issuedOn>
+  <decision>Approved</decision>
+  <coveredPart>Coolant expansion tank sensor</coveredPart>
+</claimDecision>

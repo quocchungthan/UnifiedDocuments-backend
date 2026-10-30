@@ -1,0 +1,4 @@
+record_type,deal_number,vin,installment,due_date,amount_usd,status
+synthetic,DEAL-1005,1FTFW1ET1EFA12345,1,2026-10-01,425.00,paid
+synthetic,DEAL-1005,1FTFW1ET1EFA12345,2,2026-11-01,425.00,pending
+synthetic,DEAL-1005,1FTFW1ET1EFA12345,3,2026-12-01,425.00,pending

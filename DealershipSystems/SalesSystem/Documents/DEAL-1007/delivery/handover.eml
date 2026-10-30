@@ -1,0 +1,12 @@
+From: delivery@example.test
+To: fleet@example.test
+Subject: Synthetic delivery confirmation for DEAL-1007
+Date: Sat, 5 Sep 2026 10:00:00 +0000
+Message-ID: <deal-1007-delivery@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Synthetic sample only.
+Tesla Model 3 demonstration vehicle VIN: 5YJ3E1EA7KF123456
+Charging cable and two key cards supplied at handover.
+Delivery checklist signed on 2026-09-05.

@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "policyNumber": "EXT-POLICY-2026-0102",
+  "vin": "JTDBR32E720123456",
+  "issuedOn": "2026-09-19",
+  "expiresOn": "2027-09-18",
+  "coverage": ["Engine", "Transmission"],
+  "exclusions": ["Routine maintenance", "Wear items"]
+}

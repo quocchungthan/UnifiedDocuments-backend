@@ -1,0 +1,7 @@
+SYNTHETIC INSPECTION RECORD INSP-57007
+Vehicle: Land Rover demonstration vehicle
+VIN: SALWR2VF0FA123456
+Inspected on: 2026-09-16
+Work: Independent used-vehicle safety inspection.
+Result: No critical findings. Rear wiper replacement advised.
+This vehicle has no supplied sales or warranty documents.

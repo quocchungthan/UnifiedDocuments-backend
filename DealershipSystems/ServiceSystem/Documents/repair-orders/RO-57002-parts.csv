@@ -1,0 +1,4 @@
+record_type,repair_order,vin,part_number,description,quantity
+synthetic,RO-57002,JTDBR32E720123456,OF-220,Oil filter,1
+synthetic,RO-57002,JTDBR32E720123456,AF-105,Air filter,1
+synthetic,RO-57002,JTDBR32E720123456,SP-410,Spark plug,4
